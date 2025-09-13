@@ -53,7 +53,7 @@ class WindowedDashboard {
 
   checkSelfScraping() {
     const warning = document.getElementById('selfScrapingWarning');
-    if (!this.activeTabUrl) return;
+    if (!this.activeTabUrl) {return;}
 
     // Check if current tab is extension page
     this.isExtensionPage = this.activeTabUrl.startsWith('chrome-extension://') ||
@@ -395,7 +395,7 @@ class WindowedDashboard {
 
   updateQueueDisplay(queueData) {
     const container = document.getElementById('queueContainer');
-    if (!container) return;
+    if (!container) {return;}
 
     if (!queueData || queueData.length === 0) {
       container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No active downloads</p>';
@@ -420,7 +420,7 @@ class WindowedDashboard {
 
   addActivityLog(message) {
     const log = document.getElementById('activityLog');
-    if (!log) return;
+    if (!log) {return;}
 
     const timestamp = new Date().toLocaleTimeString();
     const item = document.createElement('div');
@@ -480,7 +480,7 @@ class WindowedDashboard {
 
     Object.entries(mappings).forEach(([id, setting]) => {
       const element = document.getElementById(id);
-      if (!element) return;
+      if (!element) {return;}
 
       const value = typeof setting === 'function' ? setting() : this.settings[setting];
       
@@ -551,7 +551,7 @@ class WindowedDashboard {
 
   updateRecipesDisplay() {
     const container = document.getElementById('recipesList');
-    if (!container) return;
+    if (!container) {return;}
 
     if (this.recipes.length === 0) {
       container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No recipes saved yet</p>';
@@ -604,7 +604,7 @@ class WindowedDashboard {
 
   loadRecipe(index) {
     const recipe = this.recipes[index];
-    if (!recipe) return;
+    if (!recipe) {return;}
 
     document.getElementById('cssSelector').value = recipe.selector;
     document.getElementById('concurrencyLimit').value = recipe.concurrency;
@@ -630,7 +630,7 @@ class WindowedDashboard {
   clearRecipeForm() {
     ['recipeName', 'cssSelector', 'recipeDescription'].forEach(id => {
       const element = document.getElementById(id);
-      if (element) element.value = '';
+      if (element) {element.value = '';}
     });
   }
 
@@ -672,7 +672,7 @@ class WindowedDashboard {
     input.click();
     input.onchange = async (e) => {
       const file = e.target.files[0];
-      if (!file) return;
+      if (!file) {return;}
 
       try {
         const text = await file.text();

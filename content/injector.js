@@ -3,7 +3,7 @@
 (async () => {
   let profiles = {};
   let autoDetect = true;
-  let _currentSettings = {}; // Kept for future use
+  const _currentSettings = {}; // Kept for future use
   let siteProfile = null;
   let enhancedModulesLoaded = false;
   let enhancedSelector = null;
