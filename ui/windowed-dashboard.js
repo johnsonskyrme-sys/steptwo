@@ -65,6 +65,10 @@ class WindowedDashboard {
           if (nonExtensionTabs.length > 0) {
             activeTab = nonExtensionTabs[0];
             console.log(`Using fallback tab: ${activeTab.url}`);
+          } else {
+            // No suitable tabs found, keep the dashboard tab but mark it appropriately
+            console.log('No non-extension tabs found, using dashboard tab');
+            // activeTab remains the dashboard tab
           }
         }
       }
@@ -74,10 +78,24 @@ class WindowedDashboard {
         this.activeTabUrl = activeTab.url;
         this.updateActiveTabInfo(activeTab);
       } else {
-        console.warn('No suitable active tab found');
+        console.warn('No active tab found at all');
+        // Set defaults for when no tab is available
+        this.activeTabId = null;
+        this.activeTabUrl = null;
+        
+        // Update UI to show that no tab is available
+        const info = document.getElementById('activeTabInfo');
+        if (info) {
+          info.textContent = 'Active: No Tab Available';
+          info.style.backgroundImage = '';
+          info.style.paddingLeft = '0';
+        }
       }
     } catch (error) {
       console.error('Failed to detect active tab:', error);
+      // Handle error case
+      this.activeTabId = null;
+      this.activeTabUrl = null;
     }
   }
   
@@ -98,15 +116,21 @@ class WindowedDashboard {
 
   checkSelfScraping() {
     const warning = document.getElementById('selfScrapingWarning');
-    if (!this.activeTabUrl) {return;}
-
-    // Check if current tab is extension page
-    this.isExtensionPage = this.isExtensionTab(this.activeTabUrl);
-
-    if (this.isExtensionPage) {
+    
+    // If no active tab URL found or it's an extension page, show warning
+    if (!this.activeTabUrl || this.isExtensionTab(this.activeTabUrl)) {
+      this.isExtensionPage = true;
       warning.classList.add('show');
       this.disableScrapingActions();
+      
+      // Log for debugging
+      if (!this.activeTabUrl) {
+        console.log('No suitable active tab found for scraping');
+      } else {
+        console.log('Extension page detected, scraping disabled');
+      }
     } else {
+      this.isExtensionPage = false;
       warning.classList.remove('show');
       this.enableScrapingActions();
     }
@@ -155,16 +179,24 @@ class WindowedDashboard {
   updateActiveTabInfo(tab) {
     const info = document.getElementById('activeTabInfo');
     if (info && tab) {
-      const url = new URL(tab.url);
-      const domain = url.hostname.replace('www.', '');
-      info.textContent = `Active: ${domain}`;
-      
-      if (tab.favIconUrl) {
-        info.style.backgroundImage = `url(${tab.favIconUrl})`;
-        info.style.backgroundSize = '12px 12px';
-        info.style.backgroundRepeat = 'no-repeat';
-        info.style.backgroundPosition = 'left center';
-        info.style.paddingLeft = '18px';
+      // Check if this is an extension page
+      if (this.isExtensionTab(tab.url)) {
+        info.textContent = 'Active: STEPTWO Dashboard';
+        // Clear any favicon styling for extension pages
+        info.style.backgroundImage = '';
+        info.style.paddingLeft = '0';
+      } else {
+        const url = new URL(tab.url);
+        const domain = url.hostname.replace('www.', '');
+        info.textContent = `Active: ${domain}`;
+        
+        if (tab.favIconUrl) {
+          info.style.backgroundImage = `url(${tab.favIconUrl})`;
+          info.style.backgroundSize = '12px 12px';
+          info.style.backgroundRepeat = 'no-repeat';
+          info.style.backgroundPosition = 'left center';
+          info.style.paddingLeft = '18px';
+        }
       }
     }
   }
