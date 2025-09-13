@@ -107,10 +107,8 @@ export default [
     // ES module files
     files: [
       // Background ES modules
-      'background/enhanced-queue.js', 
       'background/enterprise-integration.js',
       'background/professional-export-system.js',
-      'background/service-worker-modern.js',
       'background/utils.js',
       'background/filename-mask-simple.js',
       'background/advanced-export-system.js',
@@ -179,10 +177,8 @@ export default [
     // Script files (remaining background files)
     files: ['background/*.js'],
     ignores: [
-      'background/enhanced-queue.js',
       'background/enterprise-integration.js',
       'background/professional-export-system.js',
-      'background/service-worker-modern.js',
       'background/utils.js',
       'background/filename-mask-simple.js',
       'background/advanced-export-system.js',

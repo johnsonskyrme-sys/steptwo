@@ -37,18 +37,63 @@ class WindowedDashboard {
     }
   }
 
-  // Self-Scraping Prevention
+  // Self-Scraping Prevention and Active Tab Detection
   async detectActiveTab() {
     try {
+      // First try to get the currently active tab
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tabs[0]) {
-        this.activeTabId = tabs[0].id;
-        this.activeTabUrl = tabs[0].url;
-        this.updateActiveTabInfo(tabs[0]);
+      let activeTab = tabs[0];
+      
+      // If the active tab is this extension page, find the most recent non-extension tab
+      if (activeTab && this.isExtensionTab(activeTab.url)) {
+        console.log('Dashboard detected as active tab, finding most recent non-extension tab');
+        
+        // Get all tabs ordered by last accessed time
+        const allTabs = await chrome.tabs.query({ currentWindow: true });
+        
+        // Sort by lastAccessed (most recent first) and find first non-extension tab
+        const sortedTabs = allTabs
+          .filter(tab => tab.lastAccessed && !this.isExtensionTab(tab.url))
+          .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
+        
+        if (sortedTabs.length > 0) {
+          activeTab = sortedTabs[0];
+          console.log(`Found most recent tab: ${activeTab.url}`);
+        } else {
+          // Fallback: use any non-extension tab
+          const nonExtensionTabs = allTabs.filter(tab => !this.isExtensionTab(tab.url));
+          if (nonExtensionTabs.length > 0) {
+            activeTab = nonExtensionTabs[0];
+            console.log(`Using fallback tab: ${activeTab.url}`);
+          }
+        }
+      }
+      
+      if (activeTab) {
+        this.activeTabId = activeTab.id;
+        this.activeTabUrl = activeTab.url;
+        this.updateActiveTabInfo(activeTab);
+      } else {
+        console.warn('No suitable active tab found');
       }
     } catch (error) {
       console.error('Failed to detect active tab:', error);
     }
+  }
+  
+  isExtensionTab(url) {
+    if (!url) {
+      return true;
+    }
+    return url.startsWith('chrome-extension://') ||
+           url.startsWith('moz-extension://') ||
+           url.includes('dashboard.html') ||
+           url.includes('windowed-dashboard.html') ||
+           url.includes('popup.html') ||
+           url.includes('options.html') ||
+           url.startsWith('chrome://') ||
+           url.startsWith('about:') ||
+           url.startsWith('edge://');
   }
 
   checkSelfScraping() {
@@ -56,11 +101,7 @@ class WindowedDashboard {
     if (!this.activeTabUrl) {return;}
 
     // Check if current tab is extension page
-    this.isExtensionPage = this.activeTabUrl.startsWith('chrome-extension://') ||
-                          this.activeTabUrl.includes('dashboard.html') ||
-                          this.activeTabUrl.includes('windowed-dashboard.html') ||
-                          this.activeTabUrl.includes('popup.html') ||
-                          this.activeTabUrl.includes('options.html');
+    this.isExtensionPage = this.isExtensionTab(this.activeTabUrl);
 
     if (this.isExtensionPage) {
       warning.classList.add('show');

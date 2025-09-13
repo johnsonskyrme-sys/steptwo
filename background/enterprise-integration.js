@@ -52,13 +52,13 @@ export class EnterpriseIntegration {
     
   async initializeEnhancedQueue() {
     try {
-      const { EnhancedDownloadQueue } = await import('./enhanced-queue.js');
-      this.enhancedQueue = new EnhancedDownloadQueue({
+      const { DownloadQueue } = await import('./download-queue.js');
+      this.enhancedQueue = new DownloadQueue({
         concurrency: 5,
         retryLimit: 3,
         hostLimit: 3,
-        enableSegmentation: true,
-        persistState: true
+        // Note: segmentation features consolidated into main DownloadQueue
+        enablePerformanceMode: true
       });
             
       console.log('📥 Enhanced download queue initialized');

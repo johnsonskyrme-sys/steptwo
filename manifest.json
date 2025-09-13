@@ -56,7 +56,9 @@
         "content/enhanced-macro-system.js",
         "content/macro-recorder.js",
         "content/perceptual-duplicate-detector.js",
-        "lib/css-path.js"
+        "lib/css-path.js",
+        "lib/worker-manager.js",
+        "workers/heavy-operations-worker.js"
       ],
       "matches": ["https://*/*", "http://*/*"]
     }
