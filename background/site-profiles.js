@@ -685,6 +685,15 @@ function getProfileList() {
   }));
 }
 
+// Support both ES modules and legacy importScripts
+export { 
+  SITE_PROFILES,
+  UNIVERSAL_SELECTORS, 
+  detectSiteProfile, 
+  mergeWithUserSettings, 
+  getProfileList 
+};
+
 // Export for importScripts compatibility
 if (typeof self !== 'undefined') {
   self.SITE_PROFILES = SITE_PROFILES;

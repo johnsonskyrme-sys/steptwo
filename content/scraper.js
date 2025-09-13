@@ -1684,15 +1684,15 @@ function setupCleanupListeners() {
   console.log('🔧 Cleanup listeners registered');
 }
 
-// Export functions for module usage
-export { runScrape, handleInfiniteScroll, detectPageBottom, waitForNetworkIdle, waitForContentStability, setupCleanupListeners };
-
-// Export functions to window object for testing
+// Export functions to window object for legacy compatibility
 if (typeof window !== 'undefined') {
   window.runScrape = runScrape;
   window.handleInfiniteScroll = handleInfiniteScroll;
   window.detectPageBottom = detectPageBottom;
   window.waitForNetworkIdle = waitForNetworkIdle;
+  window.waitForContentStability = waitForContentStability;
+  window.setupCleanupListeners = setupCleanupListeners;
+}
   window.waitForContentStability = waitForContentStability;
   window.scraperSettings = scraperSettings;
   window.setupCleanupListeners = setupCleanupListeners;

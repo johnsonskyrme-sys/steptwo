@@ -1,10 +1,22 @@
 {
-  "buildTime": "2025-09-13T11:25:20.186Z",
+  "buildTime": "2025-09-13T12:00:48.187Z",
   "version": "0.2.0",
-  "architecture": "classic-importscripts",
+  "architecture": "modular-importscripts",
   "features": {
-    "serviceWorkerType": "Classic importScripts",
-    "securityEnhancements": "CSP hardened, globals reduced",
-    "performanceOptimizations": "Load balancing, memory management"
+    "serviceWorkerType": "Modular importScripts with ES module support",
+    "securityEnhancements": "CSP hardened, minimal web-accessible resources",
+    "performanceOptimizations": "Load balancing, memory management, chunked processing",
+    "moduleSystem": "Hybrid ES modules with importScripts fallback"
+  },
+  "security": {
+    "cspMode": "strict",
+    "webAccessibleResources": "minimal",
+    "moduleIsolation": "enabled"
+  },
+  "buildFlags": {
+    "production": false,
+    "minified": false,
+    "deadCodeElimination": true,
+    "securityScanning": true
   }
 }

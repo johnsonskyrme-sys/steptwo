@@ -425,7 +425,7 @@ class EnhancedSelectorEngine {
 }
 
 // Enhanced picker overlay with Easy Scraper features
-export class EnhancedPickerOverlay {
+class EnhancedPickerOverlay {
   constructor(selectorEngine) {
     this.selectorEngine = selectorEngine;
     this.overlay = null;
@@ -657,5 +657,6 @@ export class EnhancedPickerOverlay {
 
 // Export to window for use in other modules
 window.EnhancedSelectorEngine = EnhancedSelectorEngine;
+window.EnhancedPickerOverlay = EnhancedPickerOverlay;
 
 }

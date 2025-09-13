@@ -1,7 +1,7 @@
 // download-queue.js - Enhanced download queue for STEPTWO V2
 // Enhanced with image filtering, duplicate detection, resume capability, and advanced progress tracking
 
-class DownloadQueue {
+export class DownloadQueue {
   constructor({concurrency = 5, retryLimit = 3, hostLimit = 3, maxConcurrency = 10, maxHostLimit = 10, retryConfig = {}} = {}) {
     this.concurrency = concurrency;
     this.hostLimit = hostLimit;
@@ -1437,6 +1437,9 @@ class DownloadQueue {
     console.log('🔄 Performance mode disabled, using full duplication detection');
   }
 }
+
+// Support both ES modules and legacy importScripts
+// (DownloadQueue class already exported via export keyword)
 
 // Export for importScripts compatibility
 if (typeof self !== 'undefined') {

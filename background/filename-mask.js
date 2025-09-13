@@ -272,3 +272,47 @@ function _validateMask(mask) {
   };
 }
 
+// Get available tokens for UI
+function getAvailableTokens() {
+  return [
+    { token: '*name*', description: 'Image filename without extension' },
+    { token: '*ext*', description: 'File extension (jpg, png, etc.)' },
+    { token: '*num*', description: 'Sequential number' },
+    { token: '*date*', description: 'Current date (YYYYMMDD)' },
+    { token: '*time*', description: 'Current time (HHMMSS)' },
+    { token: '*timestamp*', description: 'Unix timestamp' },
+    { token: '*host*', description: 'Website hostname' },
+    { token: '*domain*', description: 'Domain name only' },
+    { token: '*subdirs*', description: 'Subdirectory path' },
+    { token: '*url*', description: 'Full image URL' },
+    { token: '*path*', description: 'URL path component' },
+    { token: '*caption*', description: 'Image caption or alt text' },
+    { token: '*id*', description: 'Image ID or identifier' },
+    { token: '*resolution*', description: 'Image dimensions (e.g., 1920x1080)' },
+    { token: '*size*', description: 'File size' },
+    { token: '*type*', description: 'Image type (JPEG, PNG, etc.)' }
+  ];
+}
+
+// Support both ES modules and legacy importScripts
+export { 
+  applyMask, 
+  previewMask, 
+  getAvailableTokens,
+  _resetCounters as resetCounters,
+  _getCounters as getCounters,
+  _setCounters as setCounters,
+  _validateMask as validateMask
+};
+
+// Export for importScripts compatibility
+if (typeof self !== 'undefined') {
+  self.applyMask = applyMask;
+  self.previewMask = previewMask;
+  self.getAvailableTokens = getAvailableTokens;
+  self.resetCounters = _resetCounters;
+  self.getCounters = _getCounters;
+  self.setCounters = _setCounters;
+  self.validateMask = _validateMask;
+}
+

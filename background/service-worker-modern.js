@@ -1,8 +1,8 @@
 // service-worker-modern.js - STEPTWO V2 Unified Service Worker
-// Modern Manifest V3 architecture with proven importScripts approach
+// Modern Manifest V3 architecture with modular importScripts approach
 
-// Import dependencies using importScripts for reliable service worker compatibility
-// Heavy libraries (xlsx, jszip) should be loaded in UI contexts, not service worker
+// Import dependencies using importScripts (Chrome extension service workers don't support ES modules yet)
+// All imported files now support both ES modules and importScripts for future compatibility
 importScripts('../lib/common-utils.js');
 importScripts('./download-queue.js');
 importScripts('./filename-mask.js');
@@ -461,112 +461,112 @@ async function handleMessage(msg) {
         }
       }
       
-    case 'GET_SITE_PROFILE_LIST':
-      return {profiles: getProfileList()};
+      case 'GET_SITE_PROFILE_LIST':
+        return {profiles: getProfileList()};
       
-    case 'GET_UNIVERSAL_SELECTORS':
-      return {selectors: UNIVERSAL_SELECTORS};
+      case 'GET_UNIVERSAL_SELECTORS':
+        return {selectors: UNIVERSAL_SELECTORS};
 
-    case 'PREVIEW_FILENAME_MASK':
-      const preview = previewMask(msg.mask, msg.context);
-      return {preview, tokens: getAvailableTokens()};
+      case 'PREVIEW_FILENAME_MASK':
+        const preview = previewMask(msg.mask, msg.context);
+        return {preview, tokens: getAvailableTokens()};
       
-    case 'QUEUE_ADD_ITEMS': {
-      try {
-        const promises = (msg.items || []).map(async item => {
-          const added = await queue.add(item);
-          return {url: item.url, added};
-        });
-        const results = await Promise.all(promises);
-        return {success: true, results};
-      } catch (error) {
-        console.error('Error adding items to queue:', error);
-        return {success: false, error: error.message};
-      }
-    }
-      
-    case 'QUEUE_PAUSE':
-      queue.pause();
-      queueState.running = false;
-      badgeManager.setActive(queueState.active);
-      return {success: true, queueState};
-      
-    case 'QUEUE_RESUME':
-      queue.resume();
-      queueState.running = true;
-      badgeManager.setActive(true);
-      return {success: true, queueState};
-      
-    case 'QUEUE_CLEAR':
-      queue.clear();
-      lastItems = [];
-      queueState = {running: false, active: false, canStart: false};
-      badgeManager.setActive(false);
-      badgeManager.setActiveJobs(0);
-      return {success: true, queueState};
-      
-    case 'QUEUE_STATS':
-      return {
-        stats: queue.getStats(),
-        dashboardStats,
-        queueState,
-        loadBalancer: loadBalancer.getStats()
-      };
-      
-    case 'CLEAR_SESSION_STATS':
-      clearSessionStats();
-      return {success: true};
-    
-    case 'PERFORM_ENHANCED_EXPORT': {
-      try {
-        if (!lastItems.length) {
-          return { success: false, error: 'No items to export' };
+      case 'QUEUE_ADD_ITEMS': {
+        try {
+          const promises = (msg.items || []).map(async item => {
+            const added = await queue.add(item);
+            return {url: item.url, added};
+          });
+          const results = await Promise.all(promises);
+          return {success: true, results};
+        } catch (error) {
+          console.error('Error adding items to queue:', error);
+          return {success: false, error: error.message};
         }
-        
-        const exportData = {
-          items: lastItems,
-          stats: dashboardStats,
-          exportType: msg.exportType || 'comprehensive'
-        };
-        
-        const result = await exportSystem.exportData(exportData, msg.format, msg.filename, msg.options);
-        return { success: true, result };
-        
-      } catch (error) {
-        console.error('Enhanced export failed:', error);
-        return { success: false, error: error.message };
       }
-    }
-    
-    case 'INJECT_CONTENT_SCRIPT': {
-      try {
-        const success = await ensureContentScriptInjected(msg.tabId);
-        return {success, injected: success};
-      } catch (error) {
-        return {success: false, error: error.message};
-      }
-    }
-    
-    case 'START_SCRAPING': {
-      try {
-        if (msg.tabId) {
-          const injected = await ensureContentScriptInjected(msg.tabId);
-          if (!injected) {
-            return {success: false, error: 'Failed to inject content script'};
-          }
-        }
-        
-        queueState.canStart = true;
-        queueState.active = true;
+      
+      case 'QUEUE_PAUSE':
+        queue.pause();
+        queueState.running = false;
+        badgeManager.setActive(queueState.active);
         return {success: true, queueState};
-      } catch (error) {
-        return {success: false, error: error.message};
-      }
-    }
+      
+      case 'QUEUE_RESUME':
+        queue.resume();
+        queueState.running = true;
+        badgeManager.setActive(true);
+        return {success: true, queueState};
+      
+      case 'QUEUE_CLEAR':
+        queue.clear();
+        lastItems = [];
+        queueState = {running: false, active: false, canStart: false};
+        badgeManager.setActive(false);
+        badgeManager.setActiveJobs(0);
+        return {success: true, queueState};
+      
+      case 'QUEUE_STATS':
+        return {
+          stats: queue.getStats(),
+          dashboardStats,
+          queueState,
+          loadBalancer: loadBalancer.getStats()
+        };
+      
+      case 'CLEAR_SESSION_STATS':
+        clearSessionStats();
+        return {success: true};
     
-    default:
-      return {error: 'Unknown message type', type: msg?.type};
-  }
+      case 'PERFORM_ENHANCED_EXPORT': {
+        try {
+          if (!lastItems.length) {
+            return { success: false, error: 'No items to export' };
+          }
+        
+          const exportData = {
+            items: lastItems,
+            stats: dashboardStats,
+            exportType: msg.exportType || 'comprehensive'
+          };
+        
+          const result = await exportSystem.exportData(exportData, msg.format, msg.filename, msg.options);
+          return { success: true, result };
+        
+        } catch (error) {
+          console.error('Enhanced export failed:', error);
+          return { success: false, error: error.message };
+        }
+      }
+    
+      case 'INJECT_CONTENT_SCRIPT': {
+        try {
+          const success = await ensureContentScriptInjected(msg.tabId);
+          return {success, injected: success};
+        } catch (error) {
+          return {success: false, error: error.message};
+        }
+      }
+    
+      case 'START_SCRAPING': {
+        try {
+          if (msg.tabId) {
+            const injected = await ensureContentScriptInjected(msg.tabId);
+            if (!injected) {
+              return {success: false, error: 'Failed to inject content script'};
+            }
+          }
+        
+          queueState.canStart = true;
+          queueState.active = true;
+          return {success: true, queueState};
+        } catch (error) {
+          return {success: false, error: error.message};
+        }
+      }
+    
+      default:
+        return {error: 'Unknown message type', type: msg?.type};
+    }
   } catch (error) {
     console.error('Message handling error:', error);
     return {ok: false, error: 'Internal message processing error'};

@@ -199,7 +199,7 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 STEPTWO V2 Development Server running on http://0.0.0.0:${PORT}`);
   console.log(`📁 Serving files from: ${__dirname}`);
-  console.log(`🔧 Load extension from this directory in Chrome`);
+  console.log('🔧 Load extension from this directory in Chrome');
   console.log(`📊 Dashboard: http://0.0.0.0:${PORT}/ui/windowed-dashboard.html`);
 });
 

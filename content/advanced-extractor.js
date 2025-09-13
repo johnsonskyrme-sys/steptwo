@@ -520,12 +520,8 @@ class AdvancedExtractor {
   }
 }
 
-}
-
 // Export to window for use in other modules
 window.AdvancedExtractor = AdvancedExtractor;
-
-}
 
 // Usage example:
 // const extractor = new AdvancedExtractor();

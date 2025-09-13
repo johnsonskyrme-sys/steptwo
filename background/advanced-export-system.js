@@ -1,7 +1,7 @@
 // advanced-export-system.js - Professional export formats with comprehensive reporting
 // Based on research from multiple extensions and enterprise requirements
 
-class AdvancedExportSystem {
+export class AdvancedExportSystem {
   constructor(options = {}) {
     this.options = {
       enableCompression: options.enableCompression !== false,
@@ -840,6 +840,9 @@ class AdvancedExportSystem {
     this.tempData.clear();
   }
 }
+
+// Support both ES modules and legacy importScripts
+// (AdvancedExportSystem class already exported via export keyword)
 
 // Export for use in other modules
 if (typeof self !== 'undefined') {

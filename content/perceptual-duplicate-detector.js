@@ -1060,5 +1060,3 @@ class PerceptualDuplicateDetector {
 
 // Export to window for use in other modules
 window.PerceptualDuplicateDetector = PerceptualDuplicateDetector;
-
-}
