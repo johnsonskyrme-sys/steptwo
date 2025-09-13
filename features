@@ -1,0 +1,606 @@
+Core scraping & extraction
+
+Gallery scraping: detect gallery tiles and extract thumbnail URLs. 
+
+
+
+Extract destination/detail links (link associated with each thumbnail). 
+
+
+
+Support images in <img> and CSS background-image. 
+
+
+
+Handle multiple image formats (jpg, png, webp, gif) and format-based filtering. 
+
+
+
+Authentication & site sessions
+
+Works on sites behind login using the user’s browser session (no external auth). 
+
+
+
+Ability to use site-specific profiles/recipes for authenticated sites. 
+
+
+
+Pagination & lazy-loading
+
+Auto-detect and follow pagination (Next page link detection). 
+
+
+
+Infinite-scroll handling: smart scrolling + sentinel / IntersectionObserver to trigger lazy load. 
+
+
+
+Configurable max scroll attempts and scroll delay settings. 
+
+
+
+Selector tooling & detection
+
+Point-and-click Selector Mode: overlay picker that yields a CSS selector for a clicked item. 
+
+
+
+Smart/heuristic selector guesser (analyzes DOM patterns and suggests selectors). 
+
+
+
+Test selectors UI (quick test & highlight matches). 
+
+
+
+Save selector as a site profile/recipe for reuse. 
+
+
+
+Downloading & queue management
+
+Robust download queue with concurrency control (configurable workers). 
+
+
+
+Host concurrency limits (per-host throttling). 
+
+
+
+Retry logic with exponential backoff on failures. 
+
+
+
+Duplicate filename handling (append _1, _2, etc. / conflictAction: 'uniquify'). 
+
+
+
+Pause / resume queue and queue progress callbacks (for UI updates). 
+
+
+
+Integration with Chrome downloads API; options for saveAs and target folder naming. 
+
+
+
+Filename & export system
+
+Advanced filename-mask system with tokens (*name*, *ext*, *num*, *subdirs*, *url*, date/time tokens) and live preview. 
+
+
+
+Persistent counters across sessions for *num*. 
+
+
+
+Smart *subdirs* parsing to pull meaningful segments from complex agency URLs. 
+
+
+
+Exports: JSON (detailed report with logs/summary), CSV, XLSX. 
+
+
+
+Filtering, deduplication & image verification
+
+Min width / height filtering for images. 
+
+
+
+Optional duplicate detection using image hashing (worker-based average hash). 
+
+
+
+Skip duplicates based on hash set and emit duplicate-skip events/logs. 
+
+
+
+UI / Dashboard / UX
+
+Two-column professional dashboard: left = controls/presets, right = data/logs/tabs. 
+
+
+
+Live progress bars, counts, and activity logs. 
+
+
+
+Presets: Balanced, Fast, Thorough, Max Compatible. 
+
+
+
+Quick actions: Start scraper, Start picker, Smart guess, Start/stop recording macros. 
+
+
+
+Detailed error messages and log viewer for troubleshooting. 
+
+
+
+Reliability & performance
+
+Network-idle/page-wait detection and configurable page wait timeout. 
+
+
+
+Timeout handling and graceful degradation if pages are slow/unresponsive. 
+
+
+
+Memory-optimized processing for very large galleries (notes mention 100k+). 
+
+
+
+Circular pagination detection to avoid infinite loops. 
+
+
+
+Automation & macros
+
+Macro recorder to capture sequences (clicks, inputs, scrolls) and macro runner to replay steps. 
+
+
+
+Wait-until heuristics in macros (url change, DOM stable, selector presence). 
+
+
+
+Profiles, remote updates & extensibility
+
+Built-in site profiles for known photo agencies (Getty, Shutterstock, Imago, Mirrorpix, Action Press, Adobe Stock) with option to override selectors. 
+
+
+
+Remote profiles fetch/update mechanism (periodic remote fetch and local cache). 
+
+
+
+Ability to add custom site profiles in background or dedicated site_profiles file. 
+
+
+
+Settings & persistence
+
+Settings persisted via chrome.storage.sync (concurrency, mask, retryLimit, hostLimit, downloadFolder, autoDetectProfiles). 
+
+
+
+Settings UI with grouped categories and explanations. 
+
+
+
+Developer / build / architecture notes
+
+Manifest V3, background service worker, content scripts, modular content modules (picker, scraper, smartGuess, macro). 
+
+
+
+Background service-worker handles message routing, queue coordination and export endpoints. 
+
+
+
+Modular lib files: css-path, exif, xlsx/papaparse/jszip support. 
+
+
+
+Recommended dev workflow: load unpacked in Chrome, optional Node/npm build scripts for packaging. 
+
+
+
+Logs, telemetry & privacy
+
+Local-only processing (no server-side processing), local JSON logs and exports. 
+
+
+
+Detailed activity logs and error codes (e.g., NETWORK_ERROR, TIMEOUT, NO_IMAGES). 
+
+
+
+Misc / roadmap items (plannable features)
+
+Bulk operations (process multiple galleries simultaneously). 
+
+
+
+Scheduled scraping (cron-like scheduling). 
+
+
+
+Cloud integration (direct cloud upload). 
+
+
+
+Advanced content-based filters and API integrations. 
+ Core scraping & extraction ()
+
+Automatic gallery detection — detect common gallery patterns (tiles, lists, carousels) and surface candidate containers.
+
+Manual selector mode (point-and-click) — overlay picker that returns tested CSS/XPath selectors for items and sub-elements.
+
+Smart selector suggestions — heuristic engine that suggests best selector(s) after analyzing DOM (e.g., nth-child, attribute-based, data- attributes).
+
+Multi-element extraction — scrape: thumbnail URL, full-size image URL(s), detail page URL, captions, alt text, surrounding metadata (date, author, id).
+
+Support for <img> and CSS background-image — extract images referenced in markup or styles.
+
+Detail-page follow — optionally open/fetch detail pages to extract higher-res assets or metadata.
+
+Batch/detail scraping mode — Quick-scan (thumbnails only) and Deep-scan (follow details, fetch EXIF, captions).
+
+2) Advanced download management ()
+
+Native Chrome downloads API integration — use chrome.downloads for reliability where possible.
+
+Advanced download features — implement comprehensive download management: filters, masks, queueing, concurrency, speed limits, segmented downloads where feasible.
+
+Flexible export options — offer multiple download formats and integration capabilities for downloaded content.
+
+Unified queue (internal + external) — maintain internal queue UI and show items sent to external downloader with sync status if possible.
+
+Save-as mask & renaming — powerful filename mask system with tokens, counters, sanitization, conflict-resolution modes (overwrite/skip/uniquify), live preview.
+
+Save path handling — best-effort folder naming; integrate with native messaging host (optional) for exact folder placement beyond browser limitations.
+
+3) Queueing, concurrency & retries ()
+
+Configurable concurrency — global + per-host concurrency limits.
+
+Per-host throttling / rate-limiting — prevent hammering single domains (requests/sec, bytes/sec).
+
+Retry logic with exponential backoff — configurable retry count and backoff parameters.
+
+Pause / resume queue — persistent across UI refreshes; resume on new session when allowed.
+
+Prioritization & re-order — move items to top, deprioritize, bulk reorder, and stickiness for failed priorities.
+
+Granular progress reporting — per-item progress (bytes/percentage), overall queue progress and ETA calculation.
+
+4) Resumable / segmented downloads 
+
+Range request / segmented download support — use HTTP Range for large files and segmented concurrency for speed (respect server support).
+
+Resume on interruption — resume partial downloads where server supports Range and browser APIs permit.
+
+Fallback handling — auto-fallback to single-stream download when segmented download fails.
+
+5) Filtering, selection & transformations ()
+
+Filter rules (include/exclude) — by regex, MIME type, extension, size thresholds, width/height, domain/path patterns.
+
+Deduplication rules — skip identical URLs, skip identical content (hashing), and filename-based dedupe.
+
+Image validation — optional head-request or minimal payload fetch to verify MIME and content-length before full download.
+
+Batch transforms — inline image conversions (optionally client-side: webp→jpg converter), stripping query strings, normalizing URLs.
+
+6) Filename mask & export formats ()
+
+Robust tokens — *name*, *ext*, *num*, *url*, *domain*, *subdirs*, *caption*, *date*, time tokens, and custom metadata fields.
+
+Persistent counters & scoped counters — global and per-site counters that persist in storage.
+
+Preview & test panel — show live previews and conflict resolution behavior for sample items.
+
+Exports — JSON (full structured report), CSV, XLSX; saved logs with timestamp, summary, and item list.
+
+7) Pagination & lazy-loading ()
+
+Auto-pagination detection — next-link detection, numeric pagination detection, form-based pagination.
+
+Infinite-scroll handling — automatic smart scrolling (IntersectionObserver, scroll+delay), sentinel detection, visible-area heuristics.
+
+Configurable limits — max pages, max scroll attempts, stop conditions (no new items).
+
+Circular pagination avoidance — detect loops and stop gracefully.
+
+8) Authentication & session handling ()
+
+Use browser session — operate within logged-in session cookies; content scripts should run in-page to access authenticated DOM.
+
+Profile-based auth handling — store site profile notes for sites needing special flows (token refresh, JS triggers).
+
+Credential safety — never request credentials; rely on browser session only; show guidance to user to log in before scraping.
+
+9) Site profiles / recipes ()
+
+Built-in profiles for common layouts — include pre-made site profiles (e.g., stock galleries, media agencies) with selectors and special rules.
+
+Custom user profiles — allow saving/overriding selectors, pagination rules, and filename masks per domain.
+
+Remote profile updates — optional fetch/update mechanism with local cache and manual import/export.
+
+10) Selector toolbox & test harness ()
+
+Selector tester — evaluate a selector on the active page, highlight matches, and show sample extracted fields.
+
+CSS/XPath toggle — offer both styles for advanced users.
+
+Fallback selector chain — define primary and fallback selectors for robustness.
+
+11) UI / Dashboard / UX ()
+
+Professional dashboard — clean two-column layout: controls/presets on left, live queue/logs/tabs on right.
+
+Tabs — Items, Exports, Logs, Settings, Profiles.
+
+Compact & expanded item cards — show thumbnail, source URL, destination filename, status, actions (retry, open, copy url).
+
+Keyboard shortcuts — start/stop, open picker, focus search, etc.
+
+Context-menu integration — right-click on page items or links to "Add to Download Queue" / "Add all images" actions.
+
+Notifications — system notifications for completion/errors (configurable).
+
+12) Automation & macros 
+
+Macro recorder — record click/scroll/type flows (with waits) and replay across pages to navigate galleries that require interaction.
+
+Conditional waits — wait for selector, URL change, or network idle.
+
+Parameterized macros — macros that accept variables (e.g., start page index) for batch runs.
+
+13) Reliability, performance & scale ()
+
+Memory-efficient processing — stream/process items to avoid OOM on very large galleries (10k–100k items).
+
+Worker threads — use Web Workers for CPU-intensive tasks (hashing, image processing).
+
+Backpressure & queue spillover — avoid overloading memory by paging queue to disk (IndexedDB) or streaming.
+
+Telemetry (opt-in) — anonymized crash/usage metrics, feature usage; strictly opt-in and GDPR-friendly.
+
+14) Image hashing / dedupe advanced 
+
+Perceptual hashing — average/hash algorithms (aHash, pHash) in worker threads to detect near-duplicates.
+
+Hash tolerance config — set similarity thresholds to treat images as duplicates.
+
+Duplicate reporting — show duplicate groups and allow bulk dedupe actions.
+
+15) Advanced media support 
+
+Video & streaming — detect direct mp4/webm and segmented streams (HLS m3u8) and offer appropriate download handling (m3u8 segment fetching + merge or handoff to external).
+
+Multi-resource items — items with multiple sources (thumb + full + raw) should be grouped and optionally downloaded together.
+
+Archive downloads — collect sets and optionally compress to ZIP in-browser or via serverless cloud action.
+
+16) Cloud & external uploads ()
+
+Direct upload targets — S3, Google Drive, Dropbox, FTP/SFTP, WebDAV as post-download actions.
+
+Presets & connectors — store upload credentials/tokens securely (prefer OAuth where possible).
+
+Upload retry & validation — checksum verification after upload.
+
+17) Native host & filesystem integration ()
+
+Native messaging host — optional native helper to allow absolute path writes, better folder selection, and faster streaming to disk.
+
+Installer / native host for advanced users — provide signed native host installer for Windows/Mac/Linux.
+
+18) Privacy, security & legality ()
+
+Local-only by default — no server-side scraping unless explicitly enabled by user.
+
+Explicit user warnings — copyright, terms-of-service, and automated scraping legal note in onboarding.
+
+Respect robots.txt toggle — configurable: warn users when ignoring robots.txt and allow opt-in to obey it.
+
+Least-privilege permissions — request only necessary extension permissions, explain why each is required on install.
+
+Secure storage — encrypt sensitive tokens and only persist what is necessary.
+
+19) Accessibility & localization 
+
+A11y — keyboard navigation, ARIA labels, contrast compliance, and screen reader support.
+
+i18n — localization-ready strings and pluralization; provide at least English + one other language as demo.
+
+20) Testing, QA & CI ()
+
+Unit tests — core libs (selector heuristics, mask parser, queue logic, dedupe).
+
+Integration tests — use headless Chromium tests for scraping flows and downloads (mock responses).
+
+End-to-end tests — test on representative sample sites (internal fixtures) to validate selectors & pagination.
+
+Performance benchmarks — automated tests for large-gallery throughput, memory usage, and concurrency.
+
+Security audits — static analysis and dependency checks.
+
+21) Developer ergonomics & architecture ()
+
+Modular architecture — clear separation: UI, content-scripts, background service worker, downloader module, profile store, worker pool.
+
+TypeScript preferred — strong typing for robustness.
+
+Well-defined APIs / messages — message contracts between content script and background with versioning.
+
+Extensible plugin hooks — small plugin API for adding custom processors (e.g., site-specific processors).
+
+Documentation — developer README, architecture diagram, onboarding for new devs.
+
+22) Packaging, distribution & cross-browser 
+
+Manifest v3 support for Chrome — use service worker patterns and handle limitations (no long-lived background).
+
+Firefox packaging — maintain a compatible build (WebExtension compatibility).
+
+Auto-update — publish/update via Chrome Web Store and optionally provide enterprise/private deployment instructions.
+
+23) UX polish & helpers 
+
+Presets — Balanced, Fast, Thorough, Max-Compatible with brief descriptions.
+
+One-click common actions — "Download all images", "Download visible images", "Download originals".
+
+Quickstart wizard — onboarding that walks through selecting a site, picking a selector, and running a sample.
+
+Snapshot / debug export — export debug package (screenshot, HTML snippet, logs) to attach to bug reports.
+
+24) Logs, diagnostics & support ()
+
+Structured logs — categorize by INFO/WARN/ERROR and include context (URL, selector, itemId).
+
+User-facing error codes — consistent error codes for UI and support triage.
+
+Support generator — button to generate a support bundle (logs + sample export).
+
+25) Roadmap / optional advanced features ()
+
+Scheduled scrapes / cron jobs — run scraping tasks at scheduled times (needs to run on user machine or via optional cloud).
+
+Headless cloud runner (enterprise) — optional cloud product that runs recipes and hands off artifacts to user storage ( be opt-in and paid).
+
+Machine learning assistant — ML model to learn common selector patterns and auto-tune extraction.
+
+Browser extension marketplace / recipe store — curated site profiles shared by community.
+
+Non-functional requirements & constraints
+
+Privacy-first — default local-only, minimal telemetry, user opt-in for any data sharing.
+
+Performance — support scraping 10k+ items without crashing; memory and CPU caps per worker.
+
+Reliability — robust in flaky network, resumeability, and graceful degradation on errors.
+
+Security — avoid eval, sanitize filenames/paths, limit permissions.
+
+Legal compliance — clear UX warnings and risk sign-offs for potentially copyrighted content.
+
+
+ Core scraping, picker, downloads, concurrency/queue, filename masks, pagination, authentication via browser session, UI dashboard, structured exports, logging.
+
+ Macros, perceptual dedupe, segmented/resumable downloads, native host, cloud connectors, a11y & i18n.
+
+ ML selector assistant, headless cloud runner, recipe marketplace.
+
+
+ working end-to-end MVP: detect galleries → select items → queue downloads → export results.
+
+Core scraping
+
+Gallery detection (tiles/carousels), point-and-click selector picker, selector tester.
+
+Extract: thumbnail URL, full-size URL, detail URL, caption/alt/metadata.
+
+Download manager
+
+chrome.downloads integration, save-as mask, conflict policies (overwrite/skip/uniquify).
+
+Queue with configurable concurrency, per-host throttling, pause/resume, retries (exponential backoff).
+
+Pagination & lazy load
+
+Next-link detection, infinite-scroll sentinel, configurable max pages/scroll attempts, circular-loop detection.
+
+Auth & sessions
+
+Operate in-browser using logged-in session cookies (content scripts).
+
+Filename & exports
+
+Tokenized mask (*name*,*ext*,*num*,*domain*,*subdirs*), preview, persistent counters; exports: JSON + CSV.
+
+UI/Dashboard
+
+Two-column dashboard (controls + queue/logs), item cards, start/pause, selector mode, presets (Balanced/Fast).
+
+Reliability & privacy
+
+Page-wait/network-idle logic, structured logs, local-only default; opt-in telemetry only.
+
+Acceptance (high level): user can point to a gallery, scrub items, run queue, download X images with correct masks and a JSON report; no server processing required.
+
+Phase 2 
+
+Macro recorder / replay (click/scroll/waits).
+
+Perceptual dedupe (aHash/pHash) in workers.
+
+Resumable / segmented downloads (Range support where possible).
+
+Worker pool + IndexedDB spillover for very large queues.
+
+Remote & custom site profiles; site recipe import/export.
+
+Accessibility (A11y) & i18n readiness.
+
+Phase 3 ()
+
+Native messaging host for absolute folder control.
+
+Cloud upload connectors (S3/Drive) and headless cloud runner (enterprise).
+
+Video/HLS (m3u8) handling and in-browser zipping/archives.
+
+ML-based selector suggestion / community recipe store.
+
+Suggested epics (developer view)
+
+Scraper core (picker, extractor, selector tester) — 
+
+Downloader + queue (chrome.downloads, masks, concurrency, retries) — 
+
+Pagination & infinite scroll engine — 
+
+UI & presets (dashboard, item cards, logs) — 
+
+Exports & filename engine (tokens, counters, JSON/CSV) — 
+
+Dedupe + hashing (workers) — SHOULD
+
+Macro automation & recorder — SHOULD
+
+Native host & cloud connectors — NICE
+
+Dev notes & constraints
+
+Manifest v3 (Chrome): background service worker, content scripts for in-page access.
+
+TypeScript recommended, modular separation: UI / content-script / background / worker pool / profile store.
+
+Storage: chrome.storage.sync for settings, IndexedDB for large queues/temporary data.
+
+Workers: use Web Workers for hashing/CPU-heavy tasks.
+
+Testing: headless Chromium integration tests for real pages; unit tests for selector heuristics, mask parser, queue logic.
+
+Security & privacy: no credentials; local-only default; request minimal permissions and explain them in onboarding. Warn about copyright/ToS.
+
+Quick acceptance checklist for QA
+
+ Picker returns accurate CSS selector and highlights matches.
+
+ Queue downloads N items with masked filenames and correct conflict handling.
+
+ Pagination/infinite scroll collects items until stop conditions.
+
+ Resume after pause/browser reload restores queue state.
+
+ JSON export contains summary, items, and logs.
+
+ No network calls to external servers for scraping by default.

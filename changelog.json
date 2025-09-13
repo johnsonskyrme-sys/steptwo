@@ -1,0 +1,60 @@
+{
+  "0.1.0": {
+    "date": "2024-09-07",
+    "features": [
+      "Initial release of StepTwo V2",
+      "Point-and-click selector picker",
+      "Smart gallery detection",
+      "Download queue with concurrency control",
+      "Filename masking system",
+      "CSV and XLSX export support",
+      "Site-specific profiles",
+      "Duplicate detection",
+      "Macro recording (beta)"
+    ],
+    "fixes": [],
+    "breaking": []
+  },
+  "0.1.1": {
+    "date": "2024-09-08",
+    "features": [
+      "Added extension auto-update system",
+      "Version checking and notification",
+      "Changelog display",
+      "Update status in options page",
+      "Improved error handling for downloads"
+    ],
+    "fixes": [
+      "Fixed memory leak in large gallery processing",
+      "Improved selector stability on dynamic pages"
+    ],
+    "breaking": []
+  },
+  "0.2.0": {
+    "date": "2024-09-07",
+    "features": [
+      "Professional dashboard UI with glassmorphism design",
+      "Real-time progress tracking and live statistics",
+      "Enhanced selector picker with visual tooltips and multi-select",
+      "Advanced smart guesser with site-specific patterns and confidence scoring",
+      "Expanded site profiles for major photo agencies (Getty Images, Shutterstock, Mirrorpix, etc.)",
+      "Tabbed interface for Progress, Queue, Logs, and Exports",
+      "Preset system (Balanced, Fast, Thorough, Compatible)",
+      "Enhanced download queue with image filtering and duplicate detection",
+      "JSON export with comprehensive metadata",
+      "Advanced image dimension filtering",
+      "Improved notification system with visual feedback",
+      "Connection monitoring between dashboard and background service"
+    ],
+    "fixes": [
+      "Replaced basic popup with professional full-screen dashboard",
+      "Improved error handling and user feedback",
+      "Enhanced message passing between components",
+      "Better memory management for large galleries"
+    ],
+    "breaking": [
+      "Popup interface replaced with dashboard (opens in new tab)",
+      "Updated manifest to v0.2.0 with additional permissions"
+    ]
+  }
+}

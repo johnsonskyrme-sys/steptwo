@@ -1,0 +1,29 @@
+{
+  "name": "steptwo",
+  "version": "1.0.0",
+  "description": "A professional-grade Chrome extension for scraping image galleries with AI-powered pattern recognition and enterprise-level reliability.",
+  "type": "module",
+  "main": "eslint.config.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .js --max-warnings 50",
+    "lint:fix": "eslint . --ext .js --fix",
+    "build": "node build.cjs",
+    "dev": "node build.cjs && echo \"Development build complete. Load extension from current directory.\""
+  },
+  "keywords": [
+    "chrome-extension",
+    "web-scraper",
+    "gallery-scraper",
+    "image-downloader"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^9.35.0"
+  }
+}
