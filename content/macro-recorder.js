@@ -1407,5 +1407,3 @@ class ScheduleManager {
 
 // Export to window for use in other modules
 window.MacroRecorder = MacroRecorder;
-
-}

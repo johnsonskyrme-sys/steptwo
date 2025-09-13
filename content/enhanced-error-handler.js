@@ -612,5 +612,3 @@ window.EnhancedErrorHandler = EnhancedErrorHandler;
 
 // Export to window for use in other modules
 window.EnhancedErrorHandler = EnhancedErrorHandler;
-
-}

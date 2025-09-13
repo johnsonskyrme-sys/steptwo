@@ -682,5 +682,3 @@ class SelectorTester {
 // Export to window for use in other modules
 window.EnhancedSelectorGenerator = EnhancedSelectorGenerator;
 window.SelectorTester = SelectorTester;
-
-}

@@ -113,6 +113,10 @@ export default [
       'background/service-worker-modern.js',
       'background/utils.js',
       'background/filename-mask-simple.js',
+      'background/advanced-export-system.js',
+      'background/download-queue.js',
+      'background/filename-mask.js',
+      'background/site-profiles.js',
       // Content ES modules
       'content/crop-selector.js',
       'content/enhanced-macro-system.js',
@@ -125,6 +129,7 @@ export default [
       'content/smartGuess.js',
       // Library ES modules
       'lib/css-path.js',
+      'lib/common-utils.js',
       // Config files
       'eslint.config.js'
     ],
@@ -179,7 +184,11 @@ export default [
       'background/professional-export-system.js',
       'background/service-worker-modern.js',
       'background/utils.js',
-      'background/filename-mask-simple.js'
+      'background/filename-mask-simple.js',
+      'background/advanced-export-system.js',
+      'background/download-queue.js',
+      'background/filename-mask.js',
+      'background/site-profiles.js'
     ],
     languageOptions: {
       sourceType: 'script'

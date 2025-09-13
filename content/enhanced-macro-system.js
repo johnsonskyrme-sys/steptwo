@@ -868,5 +868,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Export to window for use in other modules
 window.EnhancedMacroSystem = EnhancedMacroSystem;
 window.MacroSystem = EnhancedMacroSystem;
-
-}

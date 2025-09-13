@@ -1,13 +1,12 @@
 // service-worker-modern.js - STEPTWO V2 Unified Service Worker
-// Modern Manifest V3 architecture with proven importScripts approach
+// Modern Manifest V3 architecture with ES modules for better maintainability
 
-// Import dependencies using importScripts for reliable service worker compatibility
-// Heavy libraries (xlsx, jszip) should be loaded in UI contexts, not service worker
-importScripts('../lib/common-utils.js');
-importScripts('./download-queue.js');
-importScripts('./filename-mask.js');
-importScripts('./site-profiles.js');
-importScripts('./advanced-export-system.js');
+// Import dependencies using ES modules for reliable service worker compatibility
+import '../lib/common-utils.js';
+import { DownloadQueue } from './download-queue.js';
+import { previewMask, getAvailableTokens } from './filename-mask.js';
+import { detectSiteProfile, mergeWithUserSettings, getProfileList, UNIVERSAL_SELECTORS } from './site-profiles.js';
+import { AdvancedExportSystem } from './advanced-export-system.js';
 
 // Load JSON data
 let profilesData = {};

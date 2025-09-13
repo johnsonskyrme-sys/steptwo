@@ -41,15 +41,22 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline';"
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self';"
   },
   "web_accessible_resources": [
     {
       "resources": [
         "icons/*.png",
         "icons/*.svg",
-        "content/*.js",
-        "lib/*.js"
+        "content/scraper.js",
+        "content/picker.js", 
+        "content/crop-selector.js",
+        "content/enhanced-selector.js",
+        "content/enhanced-selector-engine.js",
+        "content/enhanced-macro-system.js",
+        "content/macro-recorder.js",
+        "content/perceptual-duplicate-detector.js",
+        "lib/css-path.js"
       ],
       "matches": ["https://*/*", "http://*/*"]
     }
