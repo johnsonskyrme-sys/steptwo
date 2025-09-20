@@ -584,6 +584,22 @@ class StepTwoDashboard {
     if (resetSettings) {
       resetSettings.addEventListener('click', () => this.resetSettings());
     }
+
+    // Test selectors functionality
+    const testSelectors = document.getElementById('testSelectors');
+    if (testSelectors) {
+      testSelectors.addEventListener('click', () => this.testSelectors());
+    }
+
+    const clearSelectors = document.getElementById('clearSelectors');
+    if (clearSelectors) {
+      clearSelectors.addEventListener('click', () => this.clearSelectorInputs());
+    }
+
+    const clearHighlights = document.getElementById('clearHighlights');
+    if (clearHighlights) {
+      clearHighlights.addEventListener('click', () => this.clearTestHighlights());
+    }
   }
 
   setupExportHandlers() {
@@ -1115,6 +1131,208 @@ class StepTwoDashboard {
       
       this.updateSettingsUI();
       await this.saveSettings();
+    }
+  }
+
+  // Test Selector functionality
+  async testSelectors() {
+    const containerSelector = document.getElementById('containerSelector')?.value?.trim();
+    const imageSelector = document.getElementById('imageSelector')?.value?.trim();
+    const linkSelector = document.getElementById('linkSelector')?.value?.trim();
+
+    // Clear previous highlights and results
+    this.clearTestHighlights();
+
+    const results = [];
+    const testResults = document.getElementById('testResults');
+    const testResultsContent = document.getElementById('testResultsContent');
+
+    if (!testResults || !testResultsContent) {
+      console.error('Test results elements not found');
+      return;
+    }
+
+    try {
+      // Test container selector
+      if (containerSelector) {
+        const result = await this.testSingleSelector(containerSelector, 'Container', 'container');
+        results.push(result);
+      }
+
+      // Test image selector
+      if (imageSelector) {
+        const result = await this.testSingleSelector(imageSelector, 'Image', 'image');
+        results.push(result);
+      }
+
+      // Test link selector
+      if (linkSelector) {
+        const result = await this.testSingleSelector(linkSelector, 'Link', 'link');
+        results.push(result);
+      }
+
+      if (results.length === 0) {
+        results.push({
+          type: 'Error',
+          selector: 'No selectors provided',
+          count: 0,
+          status: 'error',
+          elements: []
+        });
+      }
+
+      // Display results
+      this.displayTestResults(results);
+      testResults.style.display = 'block';
+
+      // Log activity
+      const totalElements = results.reduce((sum, result) => sum + result.count, 0);
+      this.logActivity(`Tested ${results.length} selector(s), found ${totalElements} total elements`, 'success');
+
+    } catch (error) {
+      console.error('Error testing selectors:', error);
+      this.logActivity('Error testing selectors: ' + error.message, 'error');
+      
+      // Show error result
+      this.displayTestResults([{
+        type: 'Error',
+        selector: 'Test failed',
+        count: 0,
+        status: 'error',
+        elements: [],
+        error: error.message
+      }]);
+      testResults.style.display = 'block';
+    }
+  }
+
+  async testSingleSelector(selector, type, category) {
+    try {
+      // Send message to active tab to test the selector
+      if (this.isDemo) {
+        // Demo mode - simulate results
+        const mockCount = Math.floor(Math.random() * 10) + 1;
+        return {
+          type: type,
+          selector: selector,
+          count: mockCount,
+          status: mockCount > 0 ? 'success' : 'warning',
+          elements: [],
+          demo: true
+        };
+      }
+
+      // Real extension mode
+      const response = await chrome.tabs.sendMessage(this.sourceTab.id, {
+        type: 'TEST_SELECTOR',
+        selector: selector,
+        category: category
+      });
+
+      if (response && response.success) {
+        return {
+          type: type,
+          selector: selector,
+          count: response.count || 0,
+          status: response.count > 0 ? 'success' : 'warning',
+          elements: response.elements || []
+        };
+      } else {
+        throw new Error(response?.error || 'Unknown error');
+      }
+
+    } catch (error) {
+      console.warn(`Error testing ${type.toLowerCase()} selector "${selector}":`, error);
+      return {
+        type: type,
+        selector: selector,
+        count: 0,
+        status: 'error',
+        elements: [],
+        error: error.message
+      };
+    }
+  }
+
+  displayTestResults(results) {
+    const testResultsContent = document.getElementById('testResultsContent');
+    if (!testResultsContent) return;
+
+    testResultsContent.innerHTML = '';
+
+    results.forEach((result, index) => {
+      const resultItem = document.createElement('div');
+      resultItem.className = 'test-result-item';
+
+      const resultInfo = document.createElement('div');
+      resultInfo.className = 'test-result-info';
+
+      const selectorDiv = document.createElement('div');
+      selectorDiv.className = 'test-result-selector';
+      selectorDiv.textContent = `${result.type}: ${result.selector}`;
+
+      const countDiv = document.createElement('div');
+      countDiv.className = 'test-result-count';
+      if (result.demo) {
+        countDiv.textContent = `${result.count} elements found (demo mode)`;
+      } else if (result.error) {
+        countDiv.textContent = `Error: ${result.error}`;
+      } else {
+        countDiv.textContent = `${result.count} elements found`;
+      }
+
+      resultInfo.appendChild(selectorDiv);
+      resultInfo.appendChild(countDiv);
+
+      const statusDiv = document.createElement('div');
+      statusDiv.className = `test-result-status ${result.status}`;
+      statusDiv.textContent = result.status.toUpperCase();
+
+      resultItem.appendChild(resultInfo);
+      resultItem.appendChild(statusDiv);
+
+      testResultsContent.appendChild(resultItem);
+    });
+  }
+
+  clearSelectorInputs() {
+    const containerSelector = document.getElementById('containerSelector');
+    const imageSelector = document.getElementById('imageSelector');
+    const linkSelector = document.getElementById('linkSelector');
+
+    if (containerSelector) containerSelector.value = '';
+    if (imageSelector) imageSelector.value = 'img';
+    if (linkSelector) linkSelector.value = '';
+
+    // Clear test results
+    this.clearTestHighlights();
+    const testResults = document.getElementById('testResults');
+    if (testResults) {
+      testResults.style.display = 'none';
+    }
+
+    this.logActivity('Selector inputs cleared', 'info');
+  }
+
+  async clearTestHighlights() {
+    try {
+      if (this.isDemo) {
+        // Demo mode - just hide results
+        console.log('Demo mode: clearing test highlights');
+        return;
+      }
+
+      // Send message to active tab to clear highlights
+      if (this.sourceTab && this.sourceTab.id) {
+        await chrome.tabs.sendMessage(this.sourceTab.id, {
+          type: 'CLEAR_TEST_HIGHLIGHTS'
+        });
+      }
+
+      this.logActivity('Test highlights cleared', 'info');
+
+    } catch (error) {
+      console.warn('Error clearing test highlights:', error);
     }
   }
 }
