@@ -32,17 +32,26 @@
       const galleryIndicators = [
         // Enhanced image count indicators with quality check
         () => {
-          const images = document.querySelectorAll('img');
-          const significantImages = Array.from(images).filter(img => {
-            const rect = img.getBoundingClientRect();
-            return rect.width > 50 && rect.height > 50; // Filter small icons/avatars
+          const images = document.querySelectorAll('img, picture source, [style*="background-image"]');
+          const significantImages = Array.from(images).filter(el => {
+            if (el.tagName === 'IMG') {
+              const rect = el.getBoundingClientRect();
+              return rect.width > 50 && rect.height > 50; // Filter small icons/avatars
+            } else if (el.tagName === 'SOURCE') {
+              return true; // Picture sources are typically significant
+            } else {
+              // Check background image elements
+              const style = window.getComputedStyle(el);
+              const bgImage = style.backgroundImage;
+              return bgImage && bgImage !== 'none' && !bgImage.includes('data:image');
+            }
           });
           return significantImages.length >= 8;
         },
         
         // Enhanced title/URL patterns with more keywords
-        () => /gallery|portfolio|photos?|images?|album|collection|catalog|artwork|media|browse|search|stock|pic/i.test(document.title || ''),
-        () => /gallery|portfolio|photos?|images?|album|collection|catalog|browse|search|media|pic/i.test(window.location.pathname),
+        () => /gallery|portfolio|photos?|images?|album|collection|catalog|artwork|media|browse|search|stock|pic|visual|exhibit|showcase|board|stream|feed/i.test(document.title || ''),
+        () => /gallery|portfolio|photos?|images?|album|collection|catalog|browse|search|media|pic|visual|exhibit|showcase|board|stream|feed/i.test(window.location.pathname),
         
         // Enhanced DOM structure patterns
         () => document.querySelector([
@@ -98,6 +107,37 @@
             '.thumbnail-container', '.media-container'
           ].join(', '));
           return containers.length >= 6;
+        },
+        
+        // Modern framework and CSS Grid/Flexbox patterns
+        () => {
+          const modernPatterns = document.querySelectorAll([
+            '[style*="display: grid"]', '[style*="display: flex"]',
+            '.grid', '.flex', '.d-flex', '.d-grid',
+            '[class*="col-"], [class*="row"], [class*="grid-"]',
+            '.masonry', '.isotope', '.packery'
+          ].join(', '));
+          return modernPatterns.length >= 3;
+        },
+        
+        // Progressive Web App and modern image formats
+        () => {
+          const modernImages = document.querySelectorAll([
+            'img[src*=".webp"]', 'img[src*=".avif"]', 'source[type*="webp"]',
+            'source[type*="avif"]', '[data-srcset]', 'img[sizes]'
+          ].join(', '));
+          return modernImages.length >= 3;
+        },
+        
+        // Social media and content platform indicators
+        () => {
+          const socialPatterns = [
+            'instagram', 'pinterest', 'flickr', 'behance', 'dribbble',
+            'unsplash', 'pexels', 'shutterstock', 'getty', 'alamy',
+            'artstation', 'deviantart', 'tumblr', 'reddit'
+          ];
+          const urlAndTitle = (window.location.href + ' ' + document.title).toLowerCase();
+          return socialPatterns.some(pattern => urlAndTitle.includes(pattern));
         }
       ];
     
@@ -151,38 +191,27 @@
   
   const selectorCacheInstance = new SelectorCache();
   
-  // Ensure scraper module is loaded using content-script-context import
+  // Ensure scraper module is loaded - scraper.js is already injected via content_scripts in manifest
   async function ensureScraperLoaded() {
+    // Since scraper.js is loaded via content_scripts in manifest.json, functions should be available
     if (window.runScrape) {
       return; // Already loaded
     }
     
-    try {
-      // Use content-script-context import to avoid isolated world issues
-      const scraperModule = await import(chrome.runtime.getURL('content/scraper.js'));
-      
-      // Set window.runScrape from the imported module
-      if (scraperModule.runScrape) {
-        window.runScrape = scraperModule.runScrape;
-      }
-      
-      // Also expose other key functions from scraper module if they exist
-      if (scraperModule.extractImagesFromPage) {
-        window.extractImagesFromPage = scraperModule.extractImagesFromPage;
-      }
-      if (scraperModule.handlePagination) {
-        window.handlePagination = scraperModule.handlePagination;
-      }
-      
-      if (!window.runScrape) {
-        throw new Error('runScrape function not available after importing scraper module');
-      }
-      
-      console.log('✅ Core scraper module loaded successfully via content-script import');
-    } catch (error) {
-      console.error('❌ Failed to load core scraper module via import:', error);
-      throw error;
+    // Wait a bit for the content script to initialize
+    let retries = 0;
+    const maxRetries = 10;
+    
+    while (!window.runScrape && retries < maxRetries) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      retries++;
     }
+    
+    if (!window.runScrape) {
+      throw new Error('runScrape function not available after waiting for content script initialization');
+    }
+    
+    console.log('✅ Core scraper module loaded successfully from content script');
   }
   
   // Load enhanced modules only when gallery is detected or explicitly requested
@@ -205,6 +234,12 @@
           name: 'Adaptive Selector System', 
           url: 'content/adaptive-selector-system.js',
           init: initializeEnhancedSelectorSystem,
+          priority: 1
+        },
+        {
+          name: 'Element Picker',
+          url: 'content/picker.js',
+          init: null,
           priority: 1
         },
         {
@@ -280,8 +315,6 @@
           init: initializeScraperIntegration,
           priority: 1
         },
-        
-        },
         {
           name: 'Advanced Export System',
           url: 'content/advanced-export-system.js',
@@ -293,8 +326,6 @@
           url: 'content/enterprise-integration-core.js',
           init: initializeEnterpriseIntegration,
           priority: 2
-        },
-        
         },
         {
           name: 'Intelligent Caching System',
@@ -310,3 +341,42 @@
         },
         
         // Lower priority modules
+      ];
+
+      // Load all modules with error handling
+      for (const module of moduleLoaders) {
+        try {
+          console.log(`⚡ Loading ${module.name}...`);
+          
+          // Dynamic script loading for content script context
+          const script = document.createElement('script');
+          script.src = chrome.runtime.getURL(module.url);
+          script.async = true;
+          
+          await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+          
+          if (module.init && typeof module.init === 'function') {
+            await module.init();
+          }
+          
+          console.log(`✅ ${module.name} loaded successfully`);
+        } catch (error) {
+          console.warn(`⚠️ Failed to load ${module.name}:`, error);
+          // Continue with other modules even if one fails
+        }
+      }
+      
+      enhancedModulesLoaded = true;
+      console.log('🎉 All enhanced modules loaded successfully');
+      
+    } catch (error) {
+      console.error('❌ Failed to load enhanced modules:', error);
+      // Don't throw - allow basic functionality to continue
+    }
+  }
+
+})();

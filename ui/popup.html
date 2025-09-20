@@ -49,22 +49,20 @@
 
         <div class="quick-actions">
             <button class="action-button primary" id="scanGalleryBtn">
-                <span class="icon">🚀</span>Scan Gallery Images
+                <span class="icon">🚀</span>Start Quick Scan
             </button>
             <button class="action-button" id="advancedScanBtn">
-                <span class="icon">⚙️</span>Advanced Scan with Pagination
+                <span class="icon">⚙️</span>Deep Scan (All Pages)
             </button>
         </div>
 
         <div class="selector-mode">
-            <div class="selector-toggle">
-                <span>Smart Element Picker</span>
-                <div class="toggle-switch" id="selectorModeToggle">
-                    <div class="toggle-slider"></div>
-                </div>
-            </div>
+            <button class="action-button selector-toggle-btn" id="selectorModeBtn">
+                <span class="icon">🎯</span>
+                <span class="btn-text" id="selectorBtnText">Enable Manual Picker</span>
+            </button>
             <div class="mode-indicator" id="selectorModeStatus">
-                Click to manually select gallery items
+                Choose items manually by clicking
             </div>
         </div>
     </div>
@@ -101,10 +99,10 @@
 
         <div class="advanced-section">
             <button class="action-button" id="openOptionsBtn">
-                <span class="icon">⚙️</span>Advanced Settings Panel
+                <span class="icon">⚙️</span>Settings & Tools
             </button>
             <button class="action-button" id="clearCacheBtn">
-                <span class="icon">🗑️</span>Clear Cache & Reset
+                <span class="icon">🗑️</span>Reset & Clear Data
             </button>
         </div>
     </div>
@@ -128,10 +126,10 @@
 
         <div class="quick-actions">
             <button class="action-button" id="exportResultsBtn" disabled>
-                <span class="icon">📦</span>Export Scan Results
+                <span class="icon">📦</span>Export Results
             </button>
             <button class="action-button" id="downloadAllBtn" disabled>
-                <span class="icon">⬇️</span>Download All Images
+                <span class="icon">⬇️</span>Download Images
             </button>
         </div>
 
