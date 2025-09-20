@@ -5,12 +5,23 @@ A professional-grade Chrome extension for scraping image galleries with AI-power
 ## Features
 
 - **Smart Image Detection**: Advanced DOM analysis for extracting images from modern web galleries
+- **Robust Helper Functions**: Enhanced utilities for reliable web scraping operations
 - **Authenticated Site Support**: Works with your existing browser session on authenticated sites
 - **Professional Export Options**: Multiple format support including JSON, CSV, and direct downloads
 - **Intelligent Pagination**: Automatic detection and navigation through gallery pages
 - **Duplicate Detection**: Advanced image deduplication using perceptual hashing
 - **Customizable Download Options**: Flexible filename patterns and download organization
 - **Memory Optimized**: Efficient processing for large galleries with thousands of images
+
+### Robust Helper Functions
+
+The extension includes a comprehensive set of robust helper functions for reliable web scraping:
+
+- **Enhanced waitForSelector**: Multiple selector support, retry logic, visibility checks
+- **Advanced Image Gathering**: Multi-source detection, URL normalization, metadata extraction
+- **URL Normalization**: Protocol handling, relative URL resolution, parameter management
+- **Element Utilities**: Visibility detection, click simulation, text extraction
+- **Performance Monitoring**: Built-in timing and performance tracking
 
 ## Installation
 
