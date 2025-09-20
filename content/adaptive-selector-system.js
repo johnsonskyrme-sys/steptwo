@@ -827,4 +827,91 @@ if (window.AdaptiveSelectorSystem) {
   // Export to global scope
   window.AdaptiveSelectorSystem = AdaptiveSelectorSystem;
   console.log('✅ AdaptiveSelectorSystem loaded successfully');
+
+  // Test Selector Message Handler for Dashboard
+  if (chrome && chrome.runtime && chrome.runtime.onMessage) {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === 'TEST_SELECTOR') {
+        try {
+          const selector = message.selector;
+          const category = message.category || 'general';
+          
+          if (!selector || typeof selector !== 'string') {
+            sendResponse({ 
+              success: false, 
+              error: 'Invalid selector provided',
+              count: 0,
+              elements: []
+            });
+            return;
+          }
+
+          // Clear previous test highlights
+          clearTestHighlights();
+
+          // Test the selector using AdaptiveSelectorSystem
+          const adaptiveSystem = new AdaptiveSelectorSystem();
+          const elements = adaptiveSystem.testSelector(selector);
+          
+          // Add highlighting to found elements
+          elements.forEach((element, index) => {
+            element.classList.add('steptwo-test-highlight');
+            element.setAttribute('data-test-count', String(index + 1));
+          });
+
+          // Log the test for user feedback
+          const countMessage = elements.length === 0 ? 
+            `No elements found` : 
+            `${elements.length} element${elements.length === 1 ? '' : 's'} found`;
+          
+          console.log(`🧪 Test Selector "${selector}": ${countMessage}`);
+
+          sendResponse({ 
+            success: true, 
+            count: elements.length,
+            elements: elements.map(el => ({
+              tagName: el.tagName,
+              className: el.className,
+              id: el.id,
+              textContent: el.textContent ? el.textContent.substring(0, 50) + '...' : ''
+            }))
+          });
+
+        } catch (error) {
+          console.error('❌ Error testing selector:', error);
+          sendResponse({ 
+            success: false, 
+            error: error.message,
+            count: 0,
+            elements: []
+          });
+        }
+        return true; // Keep the message channel open for async response
+      }
+
+      if (message.type === 'CLEAR_TEST_HIGHLIGHTS') {
+        try {
+          clearTestHighlights();
+          console.log('🧹 Test highlights cleared');
+          sendResponse({ success: true });
+        } catch (error) {
+          console.error('❌ Error clearing test highlights:', error);
+          sendResponse({ success: false, error: error.message });
+        }
+        return true;
+      }
+    });
+  }
+
+  // Helper function to clear test highlights
+  function clearTestHighlights() {
+    const highlightedElements = document.querySelectorAll('.steptwo-test-highlight');
+    highlightedElements.forEach(element => {
+      element.classList.remove('steptwo-test-highlight');
+      element.removeAttribute('data-test-count');
+    });
+  }
+
+  // Expose the clear function globally for potential use
+  window.clearTestHighlights = clearTestHighlights;
 }
