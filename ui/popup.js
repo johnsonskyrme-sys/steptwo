@@ -190,9 +190,9 @@ class StepTwoPopup {
     }
 
     // Selector mode button
-    const selectorBtn = document.getElementById('enableSelectorBtn');
+    const selectorBtn = document.getElementById('selectorModeBtn');
     if (selectorBtn) {
-      selectorBtn.addEventListener('click', () => this.enableSelectorMode());
+      selectorBtn.addEventListener('click', () => this.toggleSelectorMode());
     }
 
     // Toggle switches
@@ -237,7 +237,7 @@ class StepTwoPopup {
       this.galleryData.isScanning = true;
       this.galleryData.pageStatus = 'Scanning...';
       this.updateStatusPanel();
-      this.showProgress(true);
+      this.showProgress(true, 'Starting quick scan...');
 
       // Update button state
       const quickScanBtn = document.getElementById('quickScanBtn');
@@ -285,15 +285,18 @@ class StepTwoPopup {
         this.galleryData.itemCount = response.itemCount || 0;
         this.galleryData.pageStatus = `Found ${response.itemCount || 0} items`;
         this.galleryData.lastScan = Date.now();
+        this.updateScanStatus(`✅ Scan complete! Found ${response.itemCount || 0} items`, response.itemCount);
       } else {
         this.galleryData.pageStatus = 'Scan completed';
         this.galleryData.itemCount = response?.itemCount || 0;
         this.galleryData.lastScan = Date.now();
+        this.updateScanStatus(`Scan complete: ${response?.itemCount || 0} items found`, response?.itemCount);
       }
 
     } catch (error) {
       console.error('Quick scan failed:', error);
       this.galleryData.pageStatus = 'Scan failed';
+      this.updateScanStatus('❌ Scan failed - Please try again');
       this.handleError(error, 'popup-quick-scan');
     } finally {
       this.galleryData.isScanning = false;
@@ -409,6 +412,57 @@ class StepTwoPopup {
     }
   }
 
+  async toggleSelectorMode() {
+    const selectorBtn = document.getElementById('selectorModeBtn');
+    const btnText = document.getElementById('selectorBtnText');
+    
+    if (!selectorBtn || !this.currentTab) {return;}
+
+    const isActive = selectorBtn.classList.contains('active');
+
+    try {
+      if (isActive) {
+        // Disable selector mode
+        const response = await chrome.tabs.sendMessage(this.currentTab.id, {
+          action: 'disableSelectorMode'
+        });
+        
+        if (response && response.success) {
+          selectorBtn.classList.remove('active');
+          btnText.textContent = 'Enable Manual Picker';
+          console.log('✅ Selector mode disabled successfully');
+        }
+      } else {
+        // Enable selector mode
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId: this.currentTab.id },
+            files: ['content/injector.js']
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (injectionError) {
+          console.warn('Content script may already be injected:', injectionError);
+        }
+
+        const response = await chrome.tabs.sendMessage(this.currentTab.id, {
+          action: 'enableSelectorMode'
+        });
+        
+        if (response && response.success) {
+          selectorBtn.classList.add('active');
+          btnText.textContent = 'Disable Manual Picker';
+          console.log('✅ Selector mode enabled successfully');
+          // Close popup to allow selector interaction
+          window.close();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to toggle selector mode:', error);
+      this.handleError(error, 'popup-selector-toggle');
+    }
+  }
+
   handleToggleClick(toggleId) {
     const toggle = document.getElementById(toggleId);
     if (!toggle) {return;}
@@ -433,10 +487,23 @@ class StepTwoPopup {
     this.saveSettings();
   }
 
-  showProgress(show) {
+  showProgress(show, customMessage = null) {
     const progressContainer = document.getElementById('progressContainer');
+    const scanStatus = document.getElementById('scanStatus');
+    
     if (progressContainer) {
       progressContainer.style.display = show ? 'block' : 'none';
+    }
+    
+    if (scanStatus) {
+      if (show) {
+        scanStatus.style.display = 'block';
+        scanStatus.textContent = customMessage || 'Scanning in progress...';
+        scanStatus.classList.add('scanning');
+      } else {
+        scanStatus.style.display = 'none';
+        scanStatus.classList.remove('scanning');
+      }
     }
 
     if (show) {
@@ -444,15 +511,43 @@ class StepTwoPopup {
       const progressFill = document.getElementById('progressFill');
       if (progressFill) {
         let progress = 0;
-        const interval = setInterval(() => {
-          progress += Math.random() * 10;
-          if (progress >= 100) {
-            progress = 100;
-            clearInterval(interval);
+        this.progressInterval = setInterval(() => {
+          progress += Math.random() * 5; // Slower, more realistic progress
+          if (progress >= 90) { // Stop at 90% until scan completes
+            progress = 90;
           }
           progressFill.style.width = `${progress}%`;
-        }, 100);
+        }, 200);
       }
+    } else {
+      // Complete the progress bar
+      const progressFill = document.getElementById('progressFill');
+      if (progressFill) {
+        progressFill.style.width = '100%';
+        setTimeout(() => {
+          progressFill.style.width = '0%';
+        }, 1000);
+      }
+      
+      if (this.progressInterval) {
+        clearInterval(this.progressInterval);
+        this.progressInterval = null;
+      }
+    }
+  }
+
+  updateScanStatus(message, itemCount = null) {
+    const scanStatus = document.getElementById('scanStatus');
+    const itemCountEl = document.getElementById('itemCount');
+    
+    if (scanStatus) {
+      scanStatus.textContent = message;
+      scanStatus.style.display = 'block';
+    }
+    
+    if (itemCount !== null && itemCountEl) {
+      itemCountEl.textContent = itemCount;
+      this.galleryData.itemCount = itemCount;
     }
   }
 
