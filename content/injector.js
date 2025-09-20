@@ -32,17 +32,26 @@
       const galleryIndicators = [
         // Enhanced image count indicators with quality check
         () => {
-          const images = document.querySelectorAll('img');
-          const significantImages = Array.from(images).filter(img => {
-            const rect = img.getBoundingClientRect();
-            return rect.width > 50 && rect.height > 50; // Filter small icons/avatars
+          const images = document.querySelectorAll('img, picture source, [style*="background-image"]');
+          const significantImages = Array.from(images).filter(el => {
+            if (el.tagName === 'IMG') {
+              const rect = el.getBoundingClientRect();
+              return rect.width > 50 && rect.height > 50; // Filter small icons/avatars
+            } else if (el.tagName === 'SOURCE') {
+              return true; // Picture sources are typically significant
+            } else {
+              // Check background image elements
+              const style = window.getComputedStyle(el);
+              const bgImage = style.backgroundImage;
+              return bgImage && bgImage !== 'none' && !bgImage.includes('data:image');
+            }
           });
           return significantImages.length >= 8;
         },
         
         // Enhanced title/URL patterns with more keywords
-        () => /gallery|portfolio|photos?|images?|album|collection|catalog|artwork|media|browse|search|stock|pic/i.test(document.title || ''),
-        () => /gallery|portfolio|photos?|images?|album|collection|catalog|browse|search|media|pic/i.test(window.location.pathname),
+        () => /gallery|portfolio|photos?|images?|album|collection|catalog|artwork|media|browse|search|stock|pic|visual|exhibit|showcase|board|stream|feed/i.test(document.title || ''),
+        () => /gallery|portfolio|photos?|images?|album|collection|catalog|browse|search|media|pic|visual|exhibit|showcase|board|stream|feed/i.test(window.location.pathname),
         
         // Enhanced DOM structure patterns
         () => document.querySelector([
@@ -98,6 +107,37 @@
             '.thumbnail-container', '.media-container'
           ].join(', '));
           return containers.length >= 6;
+        },
+        
+        // Modern framework and CSS Grid/Flexbox patterns
+        () => {
+          const modernPatterns = document.querySelectorAll([
+            '[style*="display: grid"]', '[style*="display: flex"]',
+            '.grid', '.flex', '.d-flex', '.d-grid',
+            '[class*="col-"], [class*="row"], [class*="grid-"]',
+            '.masonry', '.isotope', '.packery'
+          ].join(', '));
+          return modernPatterns.length >= 3;
+        },
+        
+        // Progressive Web App and modern image formats
+        () => {
+          const modernImages = document.querySelectorAll([
+            'img[src*=".webp"]', 'img[src*=".avif"]', 'source[type*="webp"]',
+            'source[type*="avif"]', '[data-srcset]', 'img[sizes]'
+          ].join(', '));
+          return modernImages.length >= 3;
+        },
+        
+        // Social media and content platform indicators
+        () => {
+          const socialPatterns = [
+            'instagram', 'pinterest', 'flickr', 'behance', 'dribbble',
+            'unsplash', 'pexels', 'shutterstock', 'getty', 'alamy',
+            'artstation', 'deviantart', 'tumblr', 'reddit'
+          ];
+          const urlAndTitle = (window.location.href + ' ' + document.title).toLowerCase();
+          return socialPatterns.some(pattern => urlAndTitle.includes(pattern));
         }
       ];
     

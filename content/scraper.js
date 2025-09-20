@@ -440,67 +440,96 @@ if (window.StepTwoScraper) {
     let lastScrollHeight = document.body.scrollHeight;
     let consecutiveFailedScrolls = 0;
     const maxFailedScrolls = 5;
+    let lastItemCount = session.items.length;
+    const staleItemCheckLimit = 3; // Stop if no new items for 3 attempts
+    let staleItemAttempts = 0;
 
     console.log('🔄 Starting infinite scroll detection...');
 
     try {
-      while (scrollAttempts < maxScrollAttempts && consecutiveFailedScrolls < maxFailedScrolls) {
-        // Scroll to bottom
+      while (scrollAttempts < maxScrollAttempts && consecutiveFailedScrolls < maxFailedScrolls && staleItemAttempts < staleItemCheckLimit) {
         const beforeScrollTop = window.pageYOffset;
-        window.scrollTo(0, document.body.scrollHeight);
         
-        // Wait for content to load
-        const scrollDelay = options.scrollDelay || 2000;
+        // Multiple scroll strategies for better compatibility
+        window.scrollTo(0, document.body.scrollHeight);
+        document.documentElement.scrollTop = document.documentElement.scrollHeight;
+        
+        // Trigger lazy loading by scrolling step by step if needed
+        if (scrollAttempts < 3) {
+          for (let i = 0; i < 3; i++) {
+            window.scrollBy(0, window.innerHeight);
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        }
+        
+        // Wait for content to load with adaptive delay
+        const scrollDelay = Math.min(options.scrollDelay || 2000, 3000 + (scrollAttempts * 500));
         await new Promise(resolve => setTimeout(resolve, scrollDelay));
+        
+        // Trigger any "Load More" buttons that might be present
+        const loadMoreButtons = document.querySelectorAll([
+          '.load-more', '.show-more', '.view-more', '[data-load-more]',
+          '[aria-label*="load more"]', '[aria-label*="show more"]',
+          'button:contains("Load")', 'button:contains("More")', 'button:contains("Show")'
+        ].join(', '));
+        
+        for (const button of loadMoreButtons) {
+          if (isElementVisible(button) && isElementClickable(button)) {
+            try {
+              await clickElement(button);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              console.log('🔘 Clicked load more button');
+            } catch (clickError) {
+              console.warn('Failed to click load more button:', clickError);
+            }
+          }
+        }
         
         // Check if new content was loaded
         const newScrollHeight = document.body.scrollHeight;
         const scrolledDistance = window.pageYOffset - beforeScrollTop;
         
+        // Extract current items to check for new content
+        const currentPageItems = await extractImagesFromPage(selector, options);
+        const newItems = currentPageItems.filter(newItem => 
+          !session.items.some(existingItem => existingItem.image === newItem.image) &&
+          !additionalItems.some(existingItem => existingItem.image === newItem.image)
+        );
+        
+        if (newItems.length > 0) {
+          additionalItems.push(...newItems);
+          console.log(`🔄 Found ${newItems.length} new items (total: ${additionalItems.length})`);
+          staleItemAttempts = 0; // Reset stale counter
+          lastItemCount = currentPageItems.length;
+        } else {
+          staleItemAttempts++;
+          console.log(`🔄 No new items found (attempt ${staleItemAttempts}/${staleItemCheckLimit})`);
+        }
+        
         if (newScrollHeight <= lastScrollHeight && scrolledDistance < 100) {
           consecutiveFailedScrolls++;
           console.log(`🔄 No new content after scroll (attempt ${consecutiveFailedScrolls}/${maxFailedScrolls})`);
           
-          // Try triggering load more buttons if scroll doesn't work
-          const loadMoreButtons = document.querySelectorAll('.load-more, .show-more, [data-load-more]');
-          let buttonClicked = false;
-          
-          for (const button of loadMoreButtons) {
-            if (isElementVisible(button) && isElementClickable(button)) {
-              console.log('🔄 Clicking load more button...');
-              await clickElement(button);
-              await new Promise(resolve => setTimeout(resolve, 2000));
-              buttonClicked = true;
-              break;
-            }
-          }
-          
-          if (!buttonClicked && consecutiveFailedScrolls >= maxFailedScrolls) {
+          if (consecutiveFailedScrolls >= maxFailedScrolls) {
             console.log('🔄 Reached end of infinite scroll');
             break;
           }
         } else {
           consecutiveFailedScrolls = 0; // Reset failed counter
           lastScrollHeight = newScrollHeight;
-          
-          // Extract new items
-          const allCurrentItems = await extractImagesFromPage(selector, options);
-          const newItems = allCurrentItems.filter(newItem => 
-            !session.items.some(existingItem => existingItem.image === newItem.image) &&
-            !additionalItems.some(existingItem => existingItem.image === newItem.image)
-          );
-          
-          if (newItems.length > 0) {
-            additionalItems.push(...newItems);
-            console.log(`🔄 Infinite scroll: ${newItems.length} new items (total: ${additionalItems.length})`);
-          }
         }
         
         scrollAttempts++;
         
-        // Memory optimization
+        // Memory optimization - prevent memory issues with large galleries
         if (additionalItems.length > 2000) {
           console.log('🔄 Large gallery detected, stopping infinite scroll to prevent memory issues');
+          break;
+        }
+        
+        // Performance check - if we haven't found new items in several attempts, stop
+        if (staleItemAttempts >= staleItemCheckLimit) {
+          console.log('🔄 No new items found in recent attempts, ending scroll');
           break;
         }
       }
@@ -518,12 +547,33 @@ if (window.StepTwoScraper) {
   async function detectInfiniteScroll() {
     const infiniteScrollIndicators = [
       '.infinite-scroll', '[data-infinite]', '.lazy-load',
-      '.scroll-trigger', '[data-scroll]', '.auto-load'
+      '.scroll-trigger', '[data-scroll]', '.auto-load',
+      // Modern framework patterns
+      '[data-infinite-scroll]', '[data-lazy-load]', '[data-auto-load]',
+      // JavaScript framework patterns  
+      '[v-infinite-scroll]', '[ng-infinite-scroll]', '[data-testid*="infinite"]',
+      // Common library patterns
+      '.masonry-infinite', '.isotope-infinite', '.waypoint',
+      // Social media patterns
+      '[aria-label*="load more"]', '[aria-label*="infinite"]',
+      // Load more button patterns (often indicates infinite scroll capability)
+      '.load-more', '.show-more', '.view-more', '[data-load-more]'
     ];
 
-    return infiniteScrollIndicators.some(selector => 
+    // Check for specific scroll event listeners (advanced detection)
+    const hasScrollListeners = window.addEventListener.toString().includes('scroll') ||
+                              document.addEventListener.toString().includes('scroll') ||
+                              window.onscroll !== null;
+
+    const hasIndicators = infiniteScrollIndicators.some(selector => 
       document.querySelector(selector) !== null
     );
+
+    // Check for modern Intersection Observer usage (common in infinite scroll)
+    const hasIntersectionObserver = typeof window.IntersectionObserver !== 'undefined' &&
+                                  document.querySelector('[data-observe], .observe, .lazy') !== null;
+
+    return hasIndicators || hasScrollListeners || hasIntersectionObserver;
   }
 
   // Apply filters to items
