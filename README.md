@@ -5,12 +5,37 @@ A professional-grade Chrome extension for scraping image galleries with AI-power
 ## Features
 
 - **Smart Image Detection**: Advanced DOM analysis for extracting images from modern web galleries
+- **Robust Helper Functions**: Enhanced utilities for reliable web scraping operations
 - **Authenticated Site Support**: Works with your existing browser session on authenticated sites
 - **Professional Export Options**: Multiple format support including JSON, CSV, and direct downloads
 - **Intelligent Pagination**: Automatic detection and navigation through gallery pages
 - **Duplicate Detection**: Advanced image deduplication using perceptual hashing
 - **Customizable Download Options**: Flexible filename patterns and download organization
 - **Memory Optimized**: Efficient processing for large galleries with thousands of images
+
+### Robust Helper Functions
+
+The extension includes a comprehensive set of robust helper functions for reliable web scraping:
+
+#### Core Utilities
+- **Enhanced waitForSelector**: Multiple selector support, retry logic, visibility checks
+- **Advanced Image Gathering**: Multi-source detection, URL normalization, metadata extraction
+- **URL Normalization**: Protocol handling, relative URL resolution, parameter management
+- **Element Utilities**: Visibility detection, click simulation, text extraction
+- **Performance Monitoring**: Built-in timing and performance tracking
+
+#### Advanced Features
+- **Multi-Element Detection**: Wait for multiple elements simultaneously with different strategies
+- **Smart Content Analysis**: AI-like element detection based on content and structure scoring
+- **Form Automation**: Robust form filling with validation and error handling
+- **Batch Processing**: Efficient processing of large element collections
+- **Integration Framework**: Seamless integration with existing modules
+
+#### Enhanced Module Integration
+- **Adaptive Selector System**: Enhanced with RobustHelpers for better element detection
+- **Advanced Extractor**: Uses RobustHelpers for comprehensive image gathering
+- **Enhanced Pagination Handler**: Improved element clicking and detection reliability
+- **Background Utilities**: Enhanced URL processing capabilities
 
 ## Installation
 

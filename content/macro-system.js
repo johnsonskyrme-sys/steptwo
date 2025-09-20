@@ -229,6 +229,20 @@ function sleep(ms) {
 }
 
 async function queryVisible(selectors, timeout = 3000) {
+  // Use RobustHelpers if available, fallback to original implementation
+  if (window.RobustHelpers) {
+    try {
+      return await window.RobustHelpers.waitForSelector(selectors, {
+        timeout: timeout,
+        visible: true,
+        throwOnTimeout: true
+      });
+    } catch (error) {
+      throw new Error('Element not found');
+    }
+  }
+  
+  // Fallback to original implementation
   const end = Date.now() + timeout;
   while (Date.now() < end) {
     for (const sel of selectors) {

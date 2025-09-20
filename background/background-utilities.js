@@ -34,6 +34,52 @@ class StepTwoUtils {
     }
   }
   
+  // Enhanced URL normalization
+  static normalizeUrl(url, options = {}) {
+    if (!url || typeof url !== 'string') return null;
+    
+    try {
+      // Clean the URL
+      let cleanUrl = url.trim().replace(/^['"]|['"]$/g, '');
+      
+      // Handle data URLs
+      if (cleanUrl.startsWith('data:')) {
+        return options.allowDataUrls !== false ? cleanUrl : null;
+      }
+      
+      // Handle protocol-relative URLs  
+      if (cleanUrl.startsWith('//')) {
+        cleanUrl = 'https:' + cleanUrl;
+      }
+      
+      // Handle relative URLs - need base URL for background scripts
+      if (!cleanUrl.match(/^https?:/)) {
+        return null; // Can't resolve relative URLs in background context
+      }
+      
+      const urlObj = new URL(cleanUrl);
+      
+      // Normalize protocol to HTTPS if requested
+      if (options.forceHttps && urlObj.protocol === 'http:') {
+        urlObj.protocol = 'https:';
+      }
+      
+      // Handle query parameters
+      if (options.removeQueryParams) {
+        urlObj.search = '';
+      }
+      
+      // Handle fragments
+      if (options.removeFragment) {
+        urlObj.hash = '';
+      }
+      
+      return urlObj.href;
+    } catch (error) {
+      return null;
+    }
+  }
+  
   // Image validation
   static isImageUrl(url) {
     const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'tiff', 'ico'];

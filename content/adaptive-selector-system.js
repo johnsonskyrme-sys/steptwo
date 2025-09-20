@@ -459,6 +459,22 @@ if (window.AdaptiveSelectorSystem) {
         return [];
       }
       
+      // Use RobustHelpers if available for enhanced selector testing
+      if (window.RobustHelpers) {
+        try {
+          const elements = Array.from(context.querySelectorAll(selector));
+          // Enhanced validation using RobustHelpers
+          const validElements = elements.filter(element => 
+            window.RobustHelpers.isElementVisible(element) || 
+            element.offsetParent !== null
+          );
+          console.log(`🔍 Enhanced selector "${selector}" found ${validElements.length} visible elements (${elements.length} total)`);
+          return validElements;
+        } catch (error) {
+          console.warn(`⚠️ Enhanced selector test failed, falling back to basic test:`, error.message);
+        }
+      }
+      
       try {
         const elements = Array.from(context.querySelectorAll(selector));
         console.log(`🔍 Selector "${selector}" found ${elements.length} elements`);

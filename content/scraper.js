@@ -90,6 +90,41 @@ if (window.StepTwoScraper) {
     const items = [];
     
     try {
+      // Use RobustHelpers for enhanced image gathering if available
+      if (window.RobustHelpers && !selector) {
+        console.log('🚀 Using RobustHelpers for enhanced image gathering...');
+        const robustImages = await window.RobustHelpers.gatherImages({
+          minWidth: options.minWidth || 0,
+          minHeight: options.minHeight || 0,
+          formats: options.allowedFormats,
+          includeMetadata: true,
+          deduplicateUrls: true,
+          resolveUrls: true
+        });
+        
+        // Convert robust format to legacy format for compatibility
+        for (let i = 0; i < robustImages.length; i++) {
+          const robustImage = robustImages[i];
+          const item = {
+            image: robustImage.url,
+            thumbnail: robustImage.thumbnailUrl || robustImage.url,
+            link: findParentLink(robustImage.element),
+            text: window.RobustHelpers.extractText(robustImage.element),
+            alt: robustImage.metadata?.alt || '',
+            index: i,
+            selector: 'RobustHelpers',
+            extractedAt: robustImage.timestamp,
+            sourceUrl: window.location.href,
+            dimensions: robustImage.dimensions,
+            metadata: robustImage.metadata
+          };
+          items.push(item);
+        }
+        
+        console.log(`🖼️ RobustHelpers found ${items.length} images`);
+        return items;
+      }
+      
       // Use provided selector or fallback to smart detection
       let elements = [];
       
@@ -185,10 +220,16 @@ if (window.StepTwoScraper) {
         return null;
       }
 
-      // Resolve relative URLs
+      // Resolve relative URLs using RobustHelpers if available
       try {
-        imageUrl = new URL(imageUrl, window.location.href).href;
-        thumbnailUrl = new URL(thumbnailUrl, window.location.href).href;
+        if (window.RobustHelpers) {
+          imageUrl = window.RobustHelpers.normalizeUrl(imageUrl);
+          thumbnailUrl = window.RobustHelpers.normalizeUrl(thumbnailUrl);
+        } else {
+          // Fallback to original URL resolution
+          imageUrl = new URL(imageUrl, window.location.href).href;
+          thumbnailUrl = new URL(thumbnailUrl, window.location.href).href;
+        }
       } catch (error) {
         console.warn('Invalid image URL:', imageUrl);
         return null;
@@ -199,7 +240,7 @@ if (window.StepTwoScraper) {
         image: imageUrl,
         thumbnail: thumbnailUrl,
         link: findParentLink(element),
-        text: extractText(element),
+        text: window.RobustHelpers ? window.RobustHelpers.extractText(element) : extractText(element),
         alt: element.alt || element.getAttribute('title') || '',
         index: index,
         selector: selector,
