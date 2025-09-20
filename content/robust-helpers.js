@@ -666,6 +666,289 @@ if (window.RobustHelpers) {
         throw error;
       }
     }
+
+    // =============================================================================
+    // ENHANCED ELEMENT UTILITIES
+    // =============================================================================
+
+    /**
+     * Wait for multiple elements with different strategies
+     * @param {Object} elementConfig - Configuration for different element types
+     * @returns {Promise<Object>} - Object with found elements
+     */
+    static async waitForMultipleElements(elementConfig, options = {}) {
+      const config = {
+        timeout: options.timeout || 10000,
+        simultaneousSearch: options.simultaneousSearch !== false,
+        ...options
+      };
+
+      if (config.simultaneousSearch) {
+        // Search for all elements simultaneously
+        const promises = Object.entries(elementConfig).map(async ([key, selectors]) => {
+          try {
+            const element = await this.waitForSelector(selectors, {
+              ...config,
+              throwOnTimeout: false
+            });
+            return { [key]: element };
+          } catch (error) {
+            return { [key]: null };
+          }
+        });
+
+        const results = await Promise.all(promises);
+        return results.reduce((acc, result) => ({ ...acc, ...result }), {});
+      } else {
+        // Search sequentially
+        const results = {};
+        for (const [key, selectors] of Object.entries(elementConfig)) {
+          try {
+            results[key] = await this.waitForSelector(selectors, {
+              ...config,
+              throwOnTimeout: false
+            });
+          } catch (error) {
+            results[key] = null;
+          }
+        }
+        return results;
+      }
+    }
+
+    /**
+     * Smart element detection with content analysis
+     * @param {Object} criteria - Detection criteria
+     * @returns {Promise<Array>} - Array of matching elements
+     */
+    static async smartElementDetection(criteria = {}) {
+      const config = {
+        minScore: criteria.minScore || 0.7,
+        includeInvisible: criteria.includeInvisible || false,
+        contentAnalysis: criteria.contentAnalysis !== false,
+        ...criteria
+      };
+
+      const elements = document.querySelectorAll('*');
+      const candidates = [];
+
+      for (const element of elements) {
+        if (!config.includeInvisible && !this.isElementVisible(element)) {
+          continue;
+        }
+
+        let score = 0;
+        const features = {
+          hasImage: false,
+          hasVideo: false,
+          hasLink: false,
+          hasText: false,
+          hasClass: false,
+          hasId: false,
+          hasDataAttrs: false
+        };
+
+        // Analyze element features
+        if (element.querySelector('img, picture, svg')) {
+          features.hasImage = true;
+          score += 0.3;
+        }
+
+        if (element.querySelector('video')) {
+          features.hasVideo = true;
+          score += 0.2;
+        }
+
+        if (element.tagName === 'A' || element.querySelector('a')) {
+          features.hasLink = true;
+          score += 0.2;
+        }
+
+        if (element.textContent && element.textContent.trim().length > 0) {
+          features.hasText = true;
+          score += 0.1;
+        }
+
+        if (element.className) {
+          features.hasClass = true;
+          score += 0.1;
+        }
+
+        if (element.id) {
+          features.hasId = true;
+          score += 0.1;
+        }
+
+        if (Array.from(element.attributes).some(attr => attr.name.startsWith('data-'))) {
+          features.hasDataAttrs = true;
+          score += 0.1;
+        }
+
+        // Content analysis
+        if (config.contentAnalysis) {
+          const text = element.textContent.toLowerCase();
+          const classNames = element.className.toLowerCase();
+          
+          // Look for gallery/image related terms
+          const imageTerms = ['gallery', 'photo', 'image', 'picture', 'media', 'thumb'];
+          if (imageTerms.some(term => text.includes(term) || classNames.includes(term))) {
+            score += 0.2;
+          }
+        }
+
+        if (score >= config.minScore) {
+          candidates.push({
+            element,
+            score,
+            features,
+            rect: element.getBoundingClientRect()
+          });
+        }
+      }
+
+      // Sort by score
+      candidates.sort((a, b) => b.score - a.score);
+      
+      console.log(`🧠 Smart detection found ${candidates.length} candidates with score >= ${config.minScore}`);
+      return candidates;
+    }
+
+    /**
+     * Enhanced form filling with validation
+     * @param {Object} formData - Form field data
+     * @param {Object} options - Filling options
+     * @returns {Promise<Object>} - Filling results
+     */
+    static async fillForm(formData, options = {}) {
+      const config = {
+        validateAfterFill: options.validateAfterFill !== false,
+        submitAfterFill: options.submitAfterFill || false,
+        waitBetweenFields: options.waitBetweenFields || 100,
+        ...options
+      };
+
+      const results = {
+        success: true,
+        filledFields: [],
+        errors: []
+      };
+
+      for (const [fieldName, fieldValue] of Object.entries(formData)) {
+        try {
+          const field = await this.waitForSelector([
+            `[name="${fieldName}"]`,
+            `#${fieldName}`,
+            `[data-field="${fieldName}"]`,
+            `[aria-label*="${fieldName}"]`
+          ], {
+            timeout: 3000,
+            throwOnTimeout: false
+          });
+
+          if (!field) {
+            results.errors.push(`Field "${fieldName}" not found`);
+            continue;
+          }
+
+          // Fill the field based on type
+          if (field.tagName === 'SELECT') {
+            field.value = fieldValue;
+            field.dispatchEvent(new Event('change', { bubbles: true }));
+          } else if (field.type === 'checkbox' || field.type === 'radio') {
+            field.checked = Boolean(fieldValue);
+            field.dispatchEvent(new Event('change', { bubbles: true }));
+          } else {
+            field.value = fieldValue;
+            field.dispatchEvent(new Event('input', { bubbles: true }));
+            field.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+
+          results.filledFields.push(fieldName);
+          
+          // Wait between fields if specified
+          if (config.waitBetweenFields > 0) {
+            await this.sleep(config.waitBetweenFields);
+          }
+
+        } catch (error) {
+          results.errors.push(`Error filling field "${fieldName}": ${error.message}`);
+          results.success = false;
+        }
+      }
+
+      // Submit form if requested
+      if (config.submitAfterFill && results.success) {
+        try {
+          const submitButton = await this.waitForSelector([
+            'input[type="submit"]',
+            'button[type="submit"]',
+            'button:contains("Submit")',
+            'button:contains("Send")',
+            '.submit-btn',
+            '.btn-submit'
+          ], {
+            timeout: 3000,
+            throwOnTimeout: false
+          });
+
+          if (submitButton) {
+            await this.clickElement(submitButton);
+            results.submitted = true;
+          } else {
+            results.errors.push('Submit button not found');
+          }
+        } catch (error) {
+          results.errors.push(`Error submitting form: ${error.message}`);
+          results.success = false;
+        }
+      }
+
+      return results;
+    }
+
+    /**
+     * Batch operation helper for processing multiple elements
+     * @param {Array} elements - Array of elements to process
+     * @param {Function} processor - Processing function
+     * @param {Object} options - Batch options
+     * @returns {Promise<Array>} - Array of results
+     */
+    static async batchProcess(elements, processor, options = {}) {
+      const config = {
+        batchSize: options.batchSize || 5,
+        delayBetweenBatches: options.delayBetweenBatches || 100,
+        continueOnError: options.continueOnError !== false,
+        ...options
+      };
+
+      const results = [];
+      
+      for (let i = 0; i < elements.length; i += config.batchSize) {
+        const batch = elements.slice(i, i + config.batchSize);
+        const batchPromises = batch.map(async (element, index) => {
+          try {
+            return await processor(element, i + index);
+          } catch (error) {
+            if (config.continueOnError) {
+              console.warn(`Batch processing error for element ${i + index}:`, error);
+              return { error: error.message, element, index: i + index };
+            } else {
+              throw error;
+            }
+          }
+        });
+
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults);
+
+        // Delay between batches
+        if (i + config.batchSize < elements.length && config.delayBetweenBatches > 0) {
+          await this.sleep(config.delayBetweenBatches);
+        }
+      }
+
+      return results;
+    }
   }
 
   // Export to global scope

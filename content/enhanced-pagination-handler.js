@@ -229,6 +229,33 @@ if (!window.EnhancedPaginationHandler) {
       const foundElements = [];
       const uniqueElements = new Set();
       
+      // Use RobustHelpers for enhanced element waiting if available
+      if (window.RobustHelpers && selectors.length > 0) {
+        try {
+          console.log('🔍 Using RobustHelpers for enhanced element detection...');
+          const element = await window.RobustHelpers.waitForSelector(selectors, {
+            timeout: 3000,
+            visible: true,
+            throwOnTimeout: false,
+            retries: 1
+          });
+          
+          if (element) {
+            foundElements.push({
+              element,
+              selector: 'RobustHelpers-enhanced',
+              visible: true,
+              clickable: window.RobustHelpers.isElementEnabled(element)
+            });
+            console.log('✅ RobustHelpers found optimal element');
+            return foundElements;
+          }
+        } catch (error) {
+          console.warn('⚠️ RobustHelpers detection failed, falling back to standard method:', error.message);
+        }
+      }
+      
+      // Fallback to original method
       for (const selector of selectors) {
         try {
           // Handle pseudo-selectors like :contains()
@@ -253,8 +280,8 @@ if (!window.EnhancedPaginationHandler) {
               foundElements.push({
                 element,
                 selector,
-                visible: this.isElementVisible(element),
-                clickable: this.isElementClickable(element)
+                visible: window.RobustHelpers ? window.RobustHelpers.isElementVisible(element) : this.isElementVisible(element),
+                clickable: window.RobustHelpers ? window.RobustHelpers.isElementEnabled(element) : this.isElementClickable(element)
               });
             }
           });
@@ -604,6 +631,28 @@ if (!window.EnhancedPaginationHandler) {
     
     // Click element with various strategies
     async clickElement(element) {
+      // Use RobustHelpers if available for enhanced clicking
+      if (window.RobustHelpers) {
+        try {
+          const success = await window.RobustHelpers.clickElement(element, {
+            retries: 3,
+            scrollIntoView: true,
+            waitAfterScroll: 500,
+            clickStrategies: ['click', 'dispatchEvent', 'mouseEvents']
+          });
+          
+          if (success) {
+            console.log('✅ Enhanced click successful');
+            return true;
+          } else {
+            console.warn('⚠️ Enhanced click failed, falling back to basic method');
+          }
+        } catch (error) {
+          console.warn('⚠️ RobustHelpers click failed, falling back:', error.message);
+        }
+      }
+      
+      // Fallback to original implementation
       // Scroll element into view
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       await this.sleep(500);

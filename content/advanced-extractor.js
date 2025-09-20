@@ -119,7 +119,16 @@ if (window.AdvancedExtractor) {
       this.extractionStats.attempted++;
     
       try {
-      // Try modern framework patterns first
+        // Use RobustHelpers for comprehensive extraction if available
+        if (window.RobustHelpers && !options.disableRobustHelpers) {
+          console.log('🚀 Using RobustHelpers for advanced extraction...');
+          const robustResult = await this.extractWithRobustHelpers(options);
+          if (robustResult.success) {
+            return this.finalizeResult(robustResult, 'robust-helpers');
+          }
+        }
+        
+        // Try modern framework patterns first
         let result = await this.tryExtractionMethod('modern', options);
         if (result.success) {return this.finalizeResult(result, 'modern');}
 
@@ -143,7 +152,7 @@ if (window.AdvancedExtractor) {
         result = await this.tryExtractionMethod('fallback', options);
         return this.finalizeResult(result, 'fallback');
 
-      } catch (_error) {
+      } catch (error) {
         console.error('Advanced extraction failed:', error);
         return {
           success: false,
@@ -491,6 +500,51 @@ if (window.AdvancedExtractor) {
       if (['webp'].includes(extension)) {return 'webp';}
       if (['gif'].includes(extension)) {return 'gif';}
       return 'unknown';
+    }
+
+    // Enhanced extraction using RobustHelpers
+    async extractWithRobustHelpers(options = {}) {
+      try {
+        const images = await window.RobustHelpers.gatherImages({
+          minWidth: options.minWidth || 0,
+          minHeight: options.minHeight || 0,
+          formats: options.allowedFormats,
+          includeMetadata: true,
+          deduplicateUrls: true,
+          resolveUrls: true,
+          validateImages: true
+        });
+
+        if (images.length === 0) {
+          return { success: false, items: [], reason: 'No images found with RobustHelpers' };
+        }
+
+        // Convert to AdvancedExtractor format
+        const items = images.map((img, index) => ({
+          image: img.url,
+          thumbnail: img.thumbnailUrl || img.url,
+          link: this.getAssociatedLink(img.element),
+          text: window.RobustHelpers.extractText(img.element, { maxLength: 200 }),
+          alt: img.metadata?.alt || '',
+          title: img.metadata?.title || '',
+          dimensions: img.dimensions,
+          format: img.metadata?.format || 'unknown',
+          index: index,
+          extractedAt: img.timestamp,
+          sourceUrl: window.location.href,
+          metadata: img.metadata
+        }));
+
+        console.log(`🎯 RobustHelpers extraction successful: ${items.length} items`);
+        return {
+          success: true,
+          items: items,
+          reason: `Found ${items.length} images using RobustHelpers`
+        };
+      } catch (error) {
+        console.warn('RobustHelpers extraction failed:', error);
+        return { success: false, items: [], reason: `RobustHelpers error: ${error.message}` };
+      }
     }
 
     // Finalize extraction result
