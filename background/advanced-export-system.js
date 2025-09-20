@@ -472,6 +472,8 @@ class AdvancedExportSystem {
         .item-card:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .item-image { width: 100%; height: 200px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .item-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .item-image img.item-thumbnail { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .item-image img.item-thumbnail:not([src]), .item-image img.item-thumbnail[src=""] { display: none; }
         .item-info { padding: 15px; }
         .item-title { font-weight: 600; margin: 0 0 10px 0; color: #1f2937; }
         .item-url { font-size: 0.9em; color: #6b7280; word-break: break-all; margin: 5px 0; }
@@ -533,7 +535,7 @@ class AdvancedExportSystem {
                 <div class="item-card">
                     <div class="item-image">
                         ${item.thumbnail || item.image ? 
-    `<img src="${item.thumbnail || item.image}" alt="Image ${index + 1}" loading="lazy" onerror="this.style.display='none';">` :
+    `<img src="${item.thumbnail || item.image}" alt="Image ${index + 1}" loading="lazy" class="item-thumbnail">` :
     '<span>No Image</span>'
 }
                     </div>

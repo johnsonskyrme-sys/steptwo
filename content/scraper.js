@@ -625,5 +625,6 @@ if (typeof module !== 'undefined' && module.exports) {
   window.scraperModule = { runScrape, extractImagesFromPage, handlePagination };
 }
 
-// ES Module exports for browsers that support it
-export { runScrape, extractImagesFromPage, handlePagination };
+// ES Module exports for browsers that support it (commented out for content script compatibility)
+// Note: ES module exports don't work in content scripts, using window exports instead
+// export { runScrape, extractImagesFromPage, handlePagination };

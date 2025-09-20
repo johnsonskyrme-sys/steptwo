@@ -18,7 +18,12 @@
   ],
   
   "background": {
-    "service_worker": "background/service-worker-modern.js"
+    "service_worker": "background/service-worker-modern.js",
+    "type": "module"
+  },
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; worker-src 'self';"
   },
   
   "content_scripts": [
