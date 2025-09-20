@@ -129,6 +129,7 @@
               <div class="form-group">
                 <label for="exportMode">Export Mode:</label>
                 <select id="exportMode" class="form-control">
+                  <option value="preview">🔍 Preview Mode (See what will be scraped)</option>
                   <option value="download">📸 Scrape Images (Download)</option>
                   <option value="data">📊 Export Data Only (CSV/XLSX)</option>
                 </select>
@@ -158,6 +159,28 @@
               <h3>📈 Activity Monitor</h3>
               <div class="progress-container" id="activityLog">
                 <div class="progress-item">Dashboard ready - click "Start Selection" to begin scraping...</div>
+              </div>
+            </div>
+
+            <!-- Preview Results (shown in preview mode) -->
+            <div class="card" id="previewResults" style="display: none;">
+              <h3>🔍 Preview Results</h3>
+              <div class="preview-summary" id="previewSummary">
+                <p class="preview-count">Found <span id="previewCount">0</span> items that would be scraped</p>
+                <div class="preview-actions">
+                  <button class="btn btn-success" id="proceedWithExport">
+                    <span>📸</span> Proceed with Scraping
+                  </button>
+                  <button class="btn btn-primary" id="proceedWithDataExport">
+                    <span>📊</span> Export Data Only
+                  </button>
+                  <button class="btn btn-secondary" id="modifySettings">
+                    <span>⚙️</span> Modify Settings
+                  </button>
+                </div>
+              </div>
+              <div id="previewContainer" class="preview-items">
+                <p style="color: #666; text-align: center; padding: 20px;">Run preview to see results...</p>
               </div>
             </div>
 

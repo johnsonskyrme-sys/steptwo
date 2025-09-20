@@ -205,11 +205,11 @@ class StepTwoDashboard {
       }
 
       if (exportButtonText) {
-        exportButtonText.textContent = 'Export Sample Data';
+        exportButtonText.textContent = 'Try Preview Mode';
       }
       if (exportBtn) {
-        exportBtn.title = 'Demo mode - install extension to export real data';
-        exportBtn.style.opacity = '0.7';
+        exportBtn.title = 'Demo mode - preview mode available, full scraping requires extension';
+        exportBtn.style.opacity = '1'; // Allow preview mode in demo
       }
     } else {
       // Installed mode: normal functionality
@@ -284,12 +284,17 @@ class StepTwoDashboard {
     }
 
     // Listen for selector picked messages from content script
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.type === 'SELECTOR_PICKED' && message.data) {
-        this.handleSelectorPicked(message.data);
-        sendResponse({ received: true });
-      }
-    });
+    if (chrome && chrome.runtime && chrome.runtime.onMessage) {
+      chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.type === 'SELECTOR_PICKED' && message.data) {
+          this.handleSelectorPicked(message.data);
+          sendResponse({ received: true });
+        } else if (message.type === 'PREVIEW_RESULTS' && message.data) {
+          this.handlePreviewResults(message.data);
+          sendResponse({ received: true });
+        }
+      });
+    }
   }
 
   async startSmartSelector() {
@@ -381,6 +386,13 @@ class StepTwoDashboard {
     }
 
     this.logActivity(`Smart selector found: ${data.elementCount} elements with "${data.selector}"`);
+  }
+
+  handlePreviewResults(data) {
+    console.log('🔍 Preview results received:', data);
+    
+    this.logActivity(`Preview completed - ${data.results.length} items found`);
+    this.displayPreviewResults(data.results);
   }
 
   async useSmartSelector(selector) {
@@ -580,17 +592,26 @@ class StepTwoDashboard {
     const exportButton = document.getElementById('exportButton');
     const exportButtonIcon = document.getElementById('exportButtonIcon');
     const exportButtonText = document.getElementById('exportButtonText');
+    const previewResults = document.getElementById('previewResults');
 
     if (exportMode) {
       exportMode.addEventListener('change', () => {
         const isDataMode = exportMode.value === 'data';
+        const isPreviewMode = exportMode.value === 'preview';
         
         if (formatSelection) {
           formatSelection.style.display = isDataMode ? 'block' : 'none';
         }
         
+        if (previewResults) {
+          previewResults.style.display = 'none'; // Hide preview results when mode changes
+        }
+        
         if (exportButtonIcon && exportButtonText) {
-          if (isDataMode) {
+          if (isPreviewMode) {
+            exportButtonIcon.textContent = '🔍';
+            exportButtonText.textContent = 'Start Preview';
+          } else if (isDataMode) {
             exportButtonIcon.textContent = '📊';
             exportButtonText.textContent = 'Export Data';
           } else {
@@ -603,6 +624,47 @@ class StepTwoDashboard {
 
     if (exportButton) {
       exportButton.addEventListener('click', () => this.handleExport());
+    }
+
+    // Setup preview action handlers
+    this.setupPreviewHandlers();
+  }
+
+  setupPreviewHandlers() {
+    const proceedWithExport = document.getElementById('proceedWithExport');
+    const proceedWithDataExport = document.getElementById('proceedWithDataExport');
+    const modifySettings = document.getElementById('modifySettings');
+
+    if (proceedWithExport) {
+      proceedWithExport.addEventListener('click', () => {
+        // Switch to download mode and start scraping
+        const exportMode = document.getElementById('exportMode');
+        if (exportMode) {
+          exportMode.value = 'download';
+          this.handleExport();
+        }
+      });
+    }
+
+    if (proceedWithDataExport) {
+      proceedWithDataExport.addEventListener('click', () => {
+        // Switch to data mode and export
+        const exportMode = document.getElementById('exportMode');
+        if (exportMode) {
+          exportMode.value = 'data';
+          this.handleExport();
+        }
+      });
+    }
+
+    if (modifySettings) {
+      modifySettings.addEventListener('click', () => {
+        // Switch to settings tab by simulating click
+        const settingsTab = document.querySelector('[data-tab="settings"]');
+        if (settingsTab) {
+          settingsTab.click();
+        }
+      });
     }
   }
 
@@ -642,20 +704,134 @@ class StepTwoDashboard {
     }
   }
 
+  async startPreviewMode() {
+    if (!this.sourceTab && !this.isDemo) {
+      this.logActivity('Error: No source tab connected', 'error');
+      return;
+    }
+
+    try {
+      this.logActivity('Starting preview scan...');
+      
+      // Show preview results section
+      const previewResults = document.getElementById('previewResults');
+      if (previewResults) {
+        previewResults.style.display = 'block';
+        
+        // Add preview mode indicator
+        const previewContainer = document.getElementById('previewContainer');
+        if (previewContainer) {
+          previewContainer.innerHTML = `
+            <div class="preview-mode-indicator">
+              🔍 Preview Mode Active - Scanning for images...
+            </div>
+          `;
+        }
+      }
+      
+      if (this.isDemo) {
+        // Demo mode - show simulated preview results
+        await this.showDemoPreviewResults();
+      } else {
+        // Send preview message to content script
+        await chrome.tabs.sendMessage(this.sourceTab.id, {
+          type: 'SMART_GUESS',
+          options: {
+            autoStart: false,
+            previewMode: true,
+            useEnhancedDetection: true
+          }
+        });
+      }
+      
+    } catch (error) {
+      console.error('Preview mode failed:', error);
+      this.logActivity(`Preview error: ${error.message}`, 'error');
+    }
+  }
+
+  async showDemoPreviewResults() {
+    // Simulate loading delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const demoResults = [
+      {
+        title: 'Product Image 1',
+        url: 'https://example.com/image1.jpg',
+        thumbnailUrl: 'https://example.com/thumb1.jpg',
+        link: 'https://example.com/product1',
+        metadata: '1920x1080, 245KB'
+      },
+      {
+        title: 'Product Image 2', 
+        url: 'https://example.com/image2.png',
+        thumbnailUrl: 'https://example.com/thumb2.png',
+        link: 'https://example.com/product2',
+        metadata: '1280x720, 180KB'
+      },
+      {
+        title: 'Gallery Image 3',
+        url: 'https://example.com/image3.webp',
+        thumbnailUrl: 'https://example.com/thumb3.webp', 
+        link: 'https://example.com/gallery3',
+        metadata: '2560x1440, 320KB'
+      }
+    ];
+    
+    this.displayPreviewResults(demoResults);
+    this.logActivity('Demo preview completed - 3 items found');
+  }
+
+  displayPreviewResults(results) {
+    const previewContainer = document.getElementById('previewContainer');
+    const previewCount = document.getElementById('previewCount');
+    
+    if (!previewContainer || !previewCount) return;
+    
+    previewCount.textContent = results.length;
+    
+    if (results.length === 0) {
+      previewContainer.innerHTML = `
+        <p style="color: #666; text-align: center; padding: 20px;">
+          No scrapeable images found on this page.
+        </p>
+      `;
+      return;
+    }
+    
+    const itemsHtml = results.map((item, index) => `
+      <div class="preview-item">
+        <div class="preview-thumbnail placeholder">🖼️</div>
+        <div class="preview-details">
+          <div class="preview-title">${item.title || `Image ${index + 1}`}</div>
+          <div class="preview-url">${item.url}</div>
+          <div class="preview-metadata">${item.metadata || 'Unknown size'}</div>
+        </div>
+        <div class="preview-status valid">Valid</div>
+      </div>
+    `).join('');
+    
+    previewContainer.innerHTML = itemsHtml;
+  }
+
   async handleExport() {
     const exportMode = document.getElementById('exportMode');
     const exportFormat = document.getElementById('exportFormat');
     
     if (!exportMode) return;
 
-    // Handle demo mode
-    if (this.isDemo) {
+    // Handle demo mode - allow preview in demo mode
+    if (this.isDemo && exportMode.value !== 'preview') {
       this.announceStatus('Export disabled in demo mode - install extension for real functionality');
       this.showDemoTooltip('Export disabled in demo mode. Install the extension to export real data.');
       return;
     }
 
-    if (exportMode.value === 'download') {
+    if (exportMode.value === 'preview') {
+      // Preview mode - run detection without downloading
+      this.announceStatus('Starting preview mode...');
+      await this.startPreviewMode();
+    } else if (exportMode.value === 'download') {
       // Start scraping mode
       this.announceStatus('Starting image scraping...');
       await this.startSmartDetection();
