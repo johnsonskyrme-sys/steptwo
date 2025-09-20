@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StepTwo Gallery Scraper</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🔥 STEPTWO</div>
+        <div class="version">Professional Gallery Scraper v2.0</div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="scanner">Scanner</div>
+        <div class="tab" data-tab="settings">Settings</div>
+        <div class="tab" data-tab="results">Results</div>
+    </div>
+
+    <!-- Scanner Tab -->
+    <div class="tab-content active" id="scanner">
+        <div class="page-info" id="pageInfo">
+            <div class="page-title" id="pageTitle">Loading...</div>
+            <div class="page-url" id="pageUrl">Detecting current page...</div>
+        </div>
+
+        <div class="scan-status" id="scanStatus">
+            Initializing scanner...
+        </div>
+
+        <div class="status-panel" id="statusPanel">
+            <div class="status-item">
+                <span>Gallery Items Found:</span>
+                <span class="status-value" id="itemCount">0</span>
+            </div>
+            <div class="status-item">
+                <span>Page Status:</span>
+                <span class="status-value" id="pageStatus">Ready</span>
+            </div>
+            <div class="status-item">
+                <span>Last Scan:</span>
+                <span class="status-value" id="lastScan">Never</span>
+            </div>
+            <div class="progress-bar" id="progressContainer">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <button class="action-button primary" id="scanGalleryBtn">
+                <span class="icon">🚀</span>Scan Gallery Images
+            </button>
+            <button class="action-button" id="advancedScanBtn">
+                <span class="icon">⚙️</span>Advanced Scan with Pagination
+            </button>
+        </div>
+
+        <div class="selector-mode">
+            <div class="selector-toggle">
+                <span>Smart Element Picker</span>
+                <div class="toggle-switch" id="selectorModeToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            <div class="mode-indicator" id="selectorModeStatus">
+                Click to manually select gallery items
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-content" id="settings">
+        <div class="quick-settings">
+            <div class="section-title">Scanner Behavior</div>
+            <div class="setting-row">
+                <span>Auto-detect galleries</span>
+                <div class="toggle-switch active" id="autoDetectToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span>Download images automatically</span>
+                <div class="toggle-switch active" id="downloadToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span>Smart filtering & deduplication</span>
+                <div class="toggle-switch active" id="smartFilterToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span>Handle pagination automatically</span>
+                <div class="toggle-switch active" id="paginationToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="advanced-section">
+            <button class="action-button" id="openOptionsBtn">
+                <span class="icon">⚙️</span>Advanced Settings Panel
+            </button>
+            <button class="action-button" id="clearCacheBtn">
+                <span class="icon">🗑️</span>Clear Cache & Reset
+            </button>
+        </div>
+    </div>
+
+    <!-- Results Tab -->
+    <div class="tab-content" id="results">
+        <div class="status-panel">
+            <div class="status-item">
+                <span>Total Items Scanned:</span>
+                <span class="status-value" id="totalScanned">0</span>
+            </div>
+            <div class="status-item">
+                <span>Download Progress:</span>
+                <span class="status-value" id="downloadProgress">0%</span>
+            </div>
+            <div class="status-item">
+                <span>Last Export:</span>
+                <span class="status-value" id="lastExport">Never</span>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <button class="action-button" id="exportResultsBtn" disabled>
+                <span class="icon">📦</span>Export Scan Results
+            </button>
+            <button class="action-button" id="downloadAllBtn" disabled>
+                <span class="icon">⬇️</span>Download All Images
+            </button>
+        </div>
+
+        <div class="export-options" id="exportOptions">
+            <button class="action-button export-button" id="exportCSVBtn">CSV</button>
+            <button class="action-button export-button" id="exportJSONBtn">JSON</button>
+            <button class="action-button export-button" id="exportXLSXBtn">Excel</button>
+            <button class="action-button export-button" id="exportZipBtn">ZIP</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <a href="#" id="helpLink">Help & Tutorial</a> • 
+        <a href="#" id="aboutLink">About StepTwo</a> • 
+        <a href="#" id="reportIssueLink">Report Issue</a>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

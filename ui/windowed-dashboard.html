@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEPTWO V2 - Professional Dashboard</title>
+  <!-- CSS styles now embedded inline for extension compatibility -->
+  <!-- Vue will be lazy-loaded when needed -->
+  <!-- PapaParse will be lazy-loaded when needed -->
+  <!-- XLSX will be lazy-loaded when needed -->
+  <link rel="stylesheet" href="windowed-dashboard.css">
+</head>
+<body>
+  <div id="app" class="dashboard-window">
+    <!-- Window Header -->
+    <header class="window-header">
+      <div class="window-title">
+        <h1>STEPTWO V2</h1>
+        <div class="active-tab-info" id="activeTabInfo">Loading...</div>
+      </div>
+      <div class="window-controls">
+        <div class="connection-status" id="connectionStatus">
+          <div class="status-dot" id="statusDot"></div>
+          <span id="statusText">Connected</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-navigation" role="tablist">
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="dashboard" role="tab" aria-selected="true" aria-controls="dashboard">
+          <span>📊</span>
+          Dashboard
+          <span class="badge green" id="dashboardBadge">0</span>
+        </button>
+        <button class="nav-tab" data-tab="controls" role="tab" aria-selected="false" aria-controls="controls">
+          <span>🎯</span>
+          Scraper Tools
+          <span class="badge" id="controlsBadge" style="display: none;">!</span>
+        </button>
+        <button class="nav-tab" data-tab="settings" role="tab" aria-selected="false" aria-controls="settings">
+          <span>⚙️</span>
+          Settings & Help
+        </button>
+        <button class="nav-tab" data-tab="recipes" role="tab" aria-selected="false" aria-controls="recipes">
+          <span>📝</span>
+          Site Recipes
+          <span class="badge blue" id="recipesBadge">0</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Demo Mode Notice -->
+    <div class="demo-notice" id="demoNotice" style="display: none; background: linear-gradient(135deg, #ffeaa7, #fab1a0); border: 2px solid #e17055; border-radius: 8px; padding: 16px; margin: 16px; text-align: center;">
+      <div style="font-size: 18px; font-weight: bold; color: #2d3436; margin-bottom: 8px;">
+        🎭 Demo Mode — Simulated Dashboard
+      </div>
+      <p style="color: #2d3436; margin: 8px 0;">
+        This page shows a simulated dashboard. To scrape real pages, install the extension:
+        <a href="options.html" style="color: #0984e3; font-weight: bold; text-decoration: underline;">Install Instructions</a>
+      </p>
+    </div>
+
+    <!-- Self-Scraping Warning -->
+    <div class="self-scraping-warning" id="selfScrapingWarning">
+      <div class="warning-icon">⚠️</div>
+      <div class="warning-text">
+        <h4>Extension Page Detected</h4>
+        <p>You're viewing the STEPTWO dashboard. Switch to a website tab to start scraping.</p>
+      </div>
+    </div>
+
+    <!-- Accessibility Status Region -->
+    <div id="statusAnnouncements" aria-live="polite" aria-atomic="false" style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"></div>
+
+    <!-- Content Area -->
+    <main class="content-area">
+      <!-- Dashboard Tab -->
+      <div id="dashboard" class="tab-content active">
+        <div class="dashboard-grid">
+          <!-- Sidebar -->
+          <aside class="sidebar">
+            <!-- Quick Stats -->
+            <div class="card">
+              <h3>📊 Quick Stats</h3>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-number" id="totalItems">0</div>
+                  <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-number" id="completedItems">0</div>
+                  <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-number" id="duplicates">0</div>
+                  <div class="stat-label">Duplicates</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-number" id="progressPercent">0%</div>
+                  <div class="stat-label">Progress</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+              <h3>🚀 Quick Actions</h3>
+              <button class="btn btn-primary btn-full" id="quickStart">
+                <span>🎯</span> <span id="quickStartText">Start Selection</span>
+              </button>
+              <button class="btn btn-primary btn-full" id="smartDetection">
+                <span>🧠</span> Smart Detection
+              </button>
+              <button class="btn btn-warning btn-full" id="pauseBtn" disabled>
+                <span>⏸️</span> Pause
+              </button>
+              <button class="btn btn-danger btn-full" id="stopBtn" disabled>
+                <span>⏹️</span> Stop All
+              </button>
+            </div>
+
+            <!-- Export Options -->
+            <div class="card">
+              <h3>📤 Export Options</h3>
+              
+              <!-- Export Mode Selection -->
+              <div class="form-group">
+                <label for="exportMode">Export Mode:</label>
+                <select id="exportMode" class="form-control">
+                  <option value="download">📸 Scrape Images (Download)</option>
+                  <option value="data">📊 Export Data Only (CSV/XLSX)</option>
+                </select>
+              </div>
+
+              <!-- Format Selection (shown when data mode is selected) -->
+              <div class="form-group" id="formatSelection" style="display: none;">
+                <label for="exportFormat">Data Format:</label>
+                <select id="exportFormat" class="form-control">
+                  <option value="csv">📊 CSV Format</option>
+                  <option value="xlsx">📈 XLSX Format</option>
+                  <option value="pdf">📄 PDF Format</option>
+                </select>
+              </div>
+
+              <!-- Export Button -->
+              <button class="btn btn-primary btn-full" id="exportButton">
+                <span id="exportButtonIcon">📸</span> <span id="exportButtonText">Start Scraping</span>
+              </button>
+            </div>
+          </aside>
+
+          <!-- Main Content -->
+          <section class="main-content">
+            <!-- Activity Monitor -->
+            <div class="card">
+              <h3>📈 Activity Monitor</h3>
+              <div class="progress-container" id="activityLog">
+                <div class="progress-item">Dashboard ready - click "Start Selection" to begin scraping...</div>
+              </div>
+            </div>
+
+            <!-- Queue Management -->
+            <div class="card">
+              <h3>📋 Download Queue</h3>
+              <div id="queueContainer">
+                <p style="color: #666; text-align: center; padding: 20px;">No active downloads</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Controls Tab -->
+      <div id="controls" class="tab-content">
+        <!-- Primary Controls -->
+        <div class="card">
+          <h3>🎯 Primary Controls</h3>
+          <div class="quick-actions">
+            <button class="btn btn-primary" id="startSelection">
+              <span>🎯</span> Start Selection Mode
+            </button>
+            <button class="btn btn-primary" id="autoDetect">
+              <span>🧠</span> Smart Detection
+            </button>
+            <button class="btn btn-warning" id="pauseDownloads" disabled>
+              <span>⏸️</span> Pause
+            </button>
+            <button class="btn btn-danger" id="cancelAll" disabled>
+              <span>⏹️</span> Cancel All
+            </button>
+            <button class="btn btn-success" id="resumeDownloads" disabled>
+              <span>▶️</span> Resume
+            </button>
+            <button class="btn btn-secondary" id="clearQueue">
+              <span>🗑️</span> Clear Queue
+            </button>
+          </div>
+        </div>
+
+        <!-- Advanced Controls -->
+        <div class="card">
+          <h3>⚙️ Advanced Controls</h3>
+          <div class="form-group">
+            <label for="concurrencyLimit">Download Concurrency (1-10)</label>
+            <input type="number" id="concurrencyLimit" min="1" max="10" value="3">
+            <small>Number of simultaneous downloads</small>
+          </div>
+          <div class="form-group">
+            <label for="retryAttempts">Retry Attempts (0-5)</label>
+            <input type="number" id="retryAttempts" min="0" max="5" value="2">
+            <small>Number of retry attempts for failed downloads</small>
+          </div>
+          <div class="form-group">
+            <label for="downloadDelay">Download Delay (ms)</label>
+            <input type="number" id="downloadDelay" min="0" max="5000" value="100" step="100">
+            <small>Delay between downloads to avoid rate limiting</small>
+          </div>
+        </div>
+
+        <!-- Real-time Stats -->
+        <div class="card">
+          <h3>📊 Real-time Statistics</h3>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number" id="downloadRate">0/min</div>
+              <div class="stat-label">Download Rate</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="queueSize">0</div>
+              <div class="stat-label">Queue Size</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="errorCount">0</div>
+              <div class="stat-label">Errors</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="estimatedTime">--</div>
+              <div class="stat-label">ETA</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="settings" class="tab-content">
+        <!-- Download Settings -->
+        <div class="card">
+          <h3>💾 Download Settings</h3>
+          <div class="form-group">
+            <label for="downloadFolder">Download Subfolder (optional)</label>
+            <input type="text" id="downloadFolder" placeholder="photos/holiday">
+            <small>Subfolder within your default downloads directory</small>
+          </div>
+          <div class="form-group">
+            <label for="filenameMask">Filename Pattern</label>
+            <input type="text" id="filenameMask" value="*name* - *num*.*ext*">
+            <small>Available tokens: *name*, *num*, *ext*, *date*, *host*, *subdirs*, *time*</small>
+            <div class="preview" id="filenamePreview">Preview: image - 001.jpg</div>
+          </div>
+        </div>
+
+        <!-- Image Filtering -->
+        <div class="card">
+          <h3>🔍 Image Filtering</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group">
+              <label for="minWidth">Min Width (px)</label>
+              <input type="number" id="minWidth" min="0" value="100">
+            </div>
+            <div class="form-group">
+              <label for="minHeight">Min Height (px)</label>
+              <input type="number" id="minHeight" min="0" value="100">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Allowed Formats</label>
+            <div style="display: flex; gap: 15px; margin-top: 8px;">
+              <label style="display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="formatJpeg" checked> JPEG
+              </label>
+              <label style="display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="formatPng" checked> PNG
+              </label>
+              <label style="display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="formatWebp" checked> WEBP
+              </label>
+              <label style="display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="formatGif" checked> GIF
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="skipDuplicates" checked>
+              Skip duplicate images (content hash)
+            </label>
+          </div>
+        </div>
+
+        <!-- Site Profiles -->
+        <div class="card">
+          <h3>🌐 Site Profiles</h3>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="autoSiteProfiles" checked>
+              Enable automatic site profile detection
+            </label>
+            <small>Automatically use optimized settings for supported websites</small>
+          </div>
+          <div id="siteProfilesList">
+            <!-- Site profiles will be populated here -->
+          </div>
+        </div>
+
+        <!-- Smart Selection Panel -->
+        <div class="card">
+          <h3>🎯 Smart Selection</h3>
+          <div class="smart-selection-panel">
+            <p style="margin-bottom: 15px; color: #666; font-size: 13px;">
+              Use AI-powered smart selection to automatically detect gallery items and generate optimized selectors.
+            </p>
+            
+            <div class="smart-selection-controls" style="display: flex; gap: 12px; margin-bottom: 15px;">
+              <button class="btn btn-primary" id="startSmartPicker">
+                <span>🎯</span> Start Smart Selection
+              </button>
+              <button class="btn btn-secondary" id="stopSmartPicker" disabled>
+                <span>⏹️</span> Stop
+              </button>
+            </div>
+            
+            <div id="smartSelectionStatus" class="smart-selection-status" style="display: none;">
+              <div class="status-indicator">
+                <div class="spinner"></div>
+                <span>Click on any gallery item to automatically detect similar elements...</span>
+              </div>
+            </div>
+            
+            <div id="smartSelectionResults" class="smart-selection-results" style="display: none;">
+              <div class="results-header">
+                <h4>Smart Selection Results</h4>
+                <span id="smartElementCount" class="element-count">0 elements found</span>
+              </div>
+              <div class="results-details">
+                <div class="form-group">
+                  <label>Generated Selector</label>
+                  <input type="text" id="smartGeneratedSelector" readonly>
+                  <small id="smartSelectorInfo"></small>
+                </div>
+                <div class="form-group">
+                  <label>Selection Strategy</label>
+                  <span id="smartSelectionStrategy" class="strategy-badge">Class Pattern</span>
+                </div>
+                <div class="actions">
+                  <button class="btn btn-success btn-sm" id="useSmartSelector">
+                    <span>✅</span> Use This Selector
+                  </button>
+                  <button class="btn btn-secondary btn-sm" id="refineSmartSelector">
+                    <span>🔧</span> Refine
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Element Selectors -->
+        <div class="card">
+          <h3>🔧 Manual Selectors</h3>
+          <div class="form-group">
+            <label for="containerSelector">Container Selector (CSS)</label>
+            <input type="text" id="containerSelector" placeholder="Use Smart Selection above or enter manually">
+            <small>CSS selector for gallery item containers</small>
+            <div class="selector-info">
+              <span id="selectorElementCount" style="color: #666; font-size: 12px;"></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="imageSelector">Image Selector (CSS)</label>
+            <input type="text" id="imageSelector" placeholder="img, picture, [style*='background-image']" value="img">
+            <small>CSS selector for images within containers</small>
+          </div>
+          <div class="form-group">
+            <label for="linkSelector">Link Selector (CSS)</label>
+            <input type="text" id="linkSelector" placeholder="a, [href]">
+            <small>CSS selector for clickable links (optional)</small>
+          </div>
+          <div style="display: flex; gap: 12px; margin-top: 12px;">
+            <button class="btn btn-primary" id="testSelectors">
+              <span>🧪</span> Test Selectors
+            </button>
+            <button class="btn btn-secondary" id="clearSelectors">
+              <span>🗑️</span> Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+          <h3>💾 Save Settings</h3>
+          <div style="display: flex; gap: 12px;">
+            <button class="btn btn-primary" id="saveSettings">
+              <span>💾</span> Save Settings
+            </button>
+            <button class="btn btn-secondary" id="resetSettings">
+              <span>🔄</span> Reset to Defaults
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recipes Tab -->
+      <div id="recipes" class="tab-content">
+        <!-- Create Recipe -->
+        <div class="card">
+          <h3>📝 Create Recipe</h3>
+          <div class="form-group">
+            <label for="recipeName">Recipe Name</label>
+            <input type="text" id="recipeName" placeholder="My Favorite Gallery Recipe">
+          </div>
+          <div class="form-group">
+            <label for="cssSelector">CSS Selector</label>
+            <input type="text" id="cssSelector" placeholder="img.gallery-item, .photo-container img">
+            <small>Target the images or containers you want to scrape</small>
+          </div>
+          <div class="form-group">
+            <label for="recipeDescription">Description</label>
+            <textarea id="recipeDescription" rows="3" placeholder="Describe what this recipe does and when to use it..."></textarea>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group">
+              <label for="recipeConcurrency">Concurrency (1-10)</label>
+              <input type="number" id="recipeConcurrency" min="1" max="10" value="3">
+              <small>Simultaneous downloads</small>
+            </div>
+            <div class="form-group">
+              <label for="recipeRetryLimit">Retry Limit (0-5)</label>
+              <input type="number" id="recipeRetryLimit" min="0" max="5" value="2">
+              <small>Retry attempts for failures</small>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="recipeMask">Filename Pattern</label>
+            <input type="text" id="recipeMask" value="*name* - *num*.*ext*">
+            <small>Available tokens: *name*, *num*, *ext*, *date*, *host*, *subdirs*, *time*</small>
+            <div class="preview" id="recipeMaskPreview">Preview: image - 001.jpg</div>
+          </div>
+          <button class="btn btn-primary" id="saveRecipe">
+            <span>💾</span> Save Recipe
+          </button>
+        </div>
+
+        <!-- Saved Recipes -->
+        <div class="card">
+          <h3>📚 Saved Recipes</h3>
+          <div id="recipesList">
+            <p style="color: #666; text-align: center; padding: 20px;">No recipes saved yet</p>
+          </div>
+        </div>
+
+        <!-- Import/Export -->
+        <div class="card">
+          <h3>📤 Backup & Restore</h3>
+          <p style="margin-bottom: 16px; color: #666;">Export your recipes to backup or share them with others.</p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-primary" id="exportRecipes">
+              <span>📤</span> Export Recipes
+            </button>
+            <button class="btn btn-secondary" id="importRecipes">
+              <span>📥</span> Import Recipes
+            </button>
+            <input type="file" id="fileInput" accept=".json" style="display: none;">
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="windowed-dashboard.js"></script>
+</body>
+</html>

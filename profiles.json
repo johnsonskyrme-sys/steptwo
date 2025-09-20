@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StepTwo Gallery Scraper - Settings</title>
+    <link rel="stylesheet" href="options.css">
+
+
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 StepTwo Gallery Scraper</h1>
+            <p>Professional settings and configuration</p>
+        </div>
+
+        <div class="content">
+            <div id="statusMessage" class="status-message"></div>
+
+            <!-- Presets Section -->
+            <div class="section">
+                <h2>Quick Presets</h2>
+                <div class="preset-buttons">
+                    <button class="preset-button" data-preset="balanced">Balanced</button>
+                    <button class="preset-button" data-preset="fast">Fast</button>
+                    <button class="preset-button" data-preset="thorough">Thorough</button>
+                    <button class="preset-button" data-preset="compatible">Max Compatible</button>
+                </div>
+            </div>
+
+            <!-- General Settings -->
+            <div class="section">
+                <h2>General Settings</h2>
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Auto-detect galleries</h3>
+                            <p>Automatically detect gallery pages and show indicators</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="autoDetectToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Download images</h3>
+                            <p>Automatically download found images</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="downloadImagesToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Smart filtering</h3>
+                            <p>Use AI-powered filtering to improve results</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="smartFilterToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Settings -->
+            <div class="section">
+                <h2>Performance Settings</h2>
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Page wait time</h3>
+                            <p>Time to wait after page loads (milliseconds)</p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" class="input-field" id="pageWaitInput" value="2000" min="500" max="30000">
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Scroll delay</h3>
+                            <p>Delay between scroll attempts (milliseconds)</p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" class="input-field" id="scrollDelayInput" value="1000" min="100" max="10000">
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Max downloads</h3>
+                            <p>Maximum concurrent downloads</p>
+                        </div>
+                        <div class="setting-control">
+                            <select class="select-field" id="maxDownloadsSelect">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="5" selected>5</option>
+                                <option value="8">8</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Settings -->
+            <div class="section">
+                <h2>Download Settings</h2>
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Download folder</h3>
+                            <p>Custom folder name for downloads</p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" class="input-field" id="downloadFolderInput" value="StepTwo" placeholder="Folder name">
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Filename mask</h3>
+                            <p>Pattern for naming downloaded files</p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" class="input-field" id="filenameMaskInput" value="*name*.*ext*" placeholder="*name*.*ext*">
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Retry attempts</h3>
+                            <p>Number of times to retry failed downloads</p>
+                        </div>
+                        <div class="setting-control">
+                            <select class="select-field" id="retryAttemptsSelect">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3" selected>3</option>
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Settings -->
+            <div class="advanced-section">
+                <div class="advanced-toggle" id="advancedToggle">
+                    Advanced Settings
+                </div>
+                <div class="advanced-content" id="advancedContent">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Memory optimization</h3>
+                            <p>Enable memory optimization for large galleries</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="memoryOptToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Performance monitoring</h3>
+                            <p>Track performance metrics and show warnings</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="perfMonToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Debug logging</h3>
+                            <p>Enable detailed debug logs in console</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch" id="debugToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Features Section -->
+            <div class="section">
+                <h2>🚀 New Features</h2>
+                
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Batch Operations</h3>
+                            <p>Process multiple galleries simultaneously with advanced queuing</p>
+                        </div>
+                        <div class="setting-control">
+                            <button class="button secondary" id="manageBatchButton">Manage Batches</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Site Profiles</h3>
+                            <p>Built-in profiles for Getty, Shutterstock, Adobe Stock and custom profiles</p>
+                        </div>
+                        <div class="setting-control">
+                            <button class="button secondary" id="manageProfilesButton">Manage Profiles</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Advanced Filtering</h3>
+                            <p>Enhanced content filtering with regex, MIME types, and dimensions</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="advancedFilteringToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Keyboard Shortcuts</h3>
+                            <p>Quick access keys: Ctrl+Shift+S (scraper), P (picker), D (dashboard)</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="keyboardShortcutsToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Context Menu Integration</h3>
+                            <p>Right-click actions for quick scraping and image downloading</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="contextMenuToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="button secondary" id="resetButton">Reset to Defaults</button>
+                <button class="button secondary" id="exportButton">Export Settings</button>
+                <button class="button secondary" id="importButton">Import Settings</button>
+                <button class="button primary" id="saveButton">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="options.js"></script>
+</body>
+</html>
