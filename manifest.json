@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "StepTwo Gallery Scraper",
+  "version": "2.0.0",
+  "description": "Professional-grade Chrome extension for scraping image galleries with AI-powered pattern recognition",
+  
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "downloads",
+    "scripting"
+  ],
+  
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  
+  "background": {
+    "service_worker": "background/service-worker-modern.js"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": [
+        "content/robust-helpers.js",
+        "content/content-utilities.js",
+        "content/scraper.js",
+        "content/macro-system.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "action": {
+    "default_popup": "ui/popup.html",
+    "default_title": "StepTwo Gallery Scraper"
+  },
+  
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["content/*", "lib/*"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ]
+}
